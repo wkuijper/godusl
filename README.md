@@ -87,7 +87,7 @@ See the raw parse tree:
 
 Look at the grammar:
 
-```$ cat ../lang.go
+<code><pre>$ cat ../lang.go
 package scriipt
 
 import (
@@ -218,7 +218,7 @@ func init() {
   if err != nil {
     panic(err.Error())
   }
-}```
+}</pre></code>
 
 Explore the intermediate stages on your own.
 
