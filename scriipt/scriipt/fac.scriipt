@@ -1,0 +1,9 @@
+x = 10 # compute factorial of x
+
+z = 1
+for y = 1; y <= x; y++
+  z = z * y
+  if z > 10000000
+    panic("too big!")
+
+print("fac", x, "==", z)
