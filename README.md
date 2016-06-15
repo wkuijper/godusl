@@ -222,5 +222,6 @@ Look at the grammar:
 
 Explore the intermediate stages on your own.
 
-Look at the code for details: start with `/dusl/scriipt/` as an
-example of usage, then move on to `/dusl/` for the internal workings.
+Look at the code for details: start with `scriipt/*` as an example of
+usage, then move on to the `dusl` package proper for the internal
+workings.
