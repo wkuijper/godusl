@@ -297,7 +297,7 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
   prfxMetaScanner.add("OP", "or>")
   prfxMetaScanner.add("OP", "<empty")
 
-  if precMap["ABF"] == nil {
+  if precMap["AFB"] == nil {
     precMap["AFB"] = make(map[string]int, 2)
   }
   if precMap["AFE"] == nil {
