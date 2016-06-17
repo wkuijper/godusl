@@ -26,11 +26,16 @@ func newTokenizer(scanner Scanner) Tokenizer {
  return &tokenizer{ scan: scanner.Scan() }
 }
 
-func (token *Token) String() string {
-  if strings.TrimSpace(token.Lit) == "" { 
-    return token.Cat // <-- "WS"
+func (this *Token) String() string {
+  cat := this.Cat
+  lit := this.Lit
+  if cat == "ERR" {
+    lit = this.Err
+  }
+  if strings.TrimSpace(lit) == "" { 
+    return cat // <-- "WS"
   } else {
-    return token.Cat + ":" + token.Lit
+    return cat + ":" + lit
   }
 }
 

@@ -29,11 +29,16 @@ func newSpanner(tokenizer Tokenizer, precedenceB map[string]int) Spanner {
 }
 
 func (this *Span) String() string {
+  cat := this.Cat
+  lit := this.Lit
+  if cat == "ERR" {
+    lit = this.Err
+  }
   if len(this.Children) == 0 {
-    if strings.TrimSpace(this.Lit) == "" { 
-      return this.Cat // <-- "WS"
+    if strings.TrimSpace(lit) == "" { 
+      return cat // <-- "WS"
     } else {
-      return this.Cat + ":" + this.Lit
+      return cat + ":" + lit
     }
   }
   sublist := fmt.Sprintf("%s", this.Children)

@@ -20,7 +20,7 @@ func TestSpanner(t *testing.T) {
     t.Fail()
   }
   res := fmt.Sprintf("%v", spans)
-  tgt := `[(ID:a WS [ID:b WS ERR WS} WS ID:d WS OP:+= WS) ERR ERR]`
+  tgt := `[(ID:a WS [ID:b WS ERR:non-matching brackets: '{ ]' WS} WS ID:d WS OP:+= WS) ERR:unexpected closing bracket: ']' ERR:missing closing bracket: corresponding to opening bracket: '(']`
   if res != tgt {
     t.Log(res)
     t.Fail()

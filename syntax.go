@@ -46,27 +46,36 @@ func (this *Syntax) dumpPretty(out io.Writer, prfx string) {
   if this == nil {
     return
   }
-  if this.Cat == "SQ" {
+  cat := this.Cat
+  if cat == "SQ" {
     this.Left.dumpPretty(out, prfx)
     if this.Right != nil && this.Right.Cat != "" {
       this.Right.dumpPretty(out, prfx)
     }
-  } else if this.Cat == "SN" {
+    return
+  }
+  if cat == "SN" {
     this.Left.dumpPretty(out, prfx)
     if this.Right != nil && this.Right.Cat != "" {
       this.Right.dumpPretty(out, prfx + "| ")
     }
-  } else if this.Cat == "UN" {
-    if this.Lit == "" {
-      fmt.Fprintf(out, "%s%s", prfx, this.Ambit.ToString())
-    } else {
-      fmt.Fprintf(out, "%s%s\n", prfx, this.Lit)
-    }
-  } else {
-    fmt.Fprintf(out, "%s%s:%s\n", prfx, this.Cat, this.Lit)
-    this.Left.dumpPretty(out, prfx + "  ")
-    this.Right.dumpPretty(out, prfx + "  ")
+    return
   }
+  lit := this.Lit
+  if cat == "UN" {
+    if lit == "" {
+      fmt.Fprintf(out, "%s%s\n", prfx, this.Ambit.ToString())
+    } else {
+      fmt.Fprintf(out, "%s%s\n", prfx, lit)
+    }
+    return
+  }
+  if cat == "ERR" {
+    lit = this.Err
+  }
+  fmt.Fprintf(out, "%s%s:%s\n", prfx, cat, lit)
+  this.Left.dumpPretty(out, prfx + "  ")
+  this.Right.dumpPretty(out, prfx + "  ")
 }
 
 func (this *Syntax) dumpRaw(out io.Writer, prfx string) {

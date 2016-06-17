@@ -16,7 +16,7 @@ func TestTokens(t *testing.T) {
   tokenizer := newTokenizer(scanner)
   tokens := tokenizer.Tokenize(ambit)
   res := fmt.Sprintf("%s", tokens)
-  tgt := `[ID:a WS OP:+= WS NUM:1 WS STR:"hello(), \n" OB:( CB:) OB:[ ID:world CB:] ERR:, WS OB:<% WS ERR:*** CB:%> WS ERR:" OP:===]`
+  tgt := `[ID:a WS OP:+= WS NUM:1 WS STR:"hello(), \n" OB:( CB:) OB:[ ID:world CB:] ERR:unexpected character(s): ',' WS OB:<% WS ERR:unexpected character(s): '***' CB:%> WS ERR:unexpected character(s): '"' OP:===]`
   if res != tgt {
     t.Log(res)
     t.Fail()
