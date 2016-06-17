@@ -421,7 +421,7 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
   templateParser := &tpT{ symbolTable: symbolTable, templates: make(map[string][]*templateT) }
   
   for _, errNode := range grammarTree.FirstN("ERR", "", 20) {
-    templateParser.err(errNode, errNode.Lit)
+    templateParser.err(errNode, errNode.Err)
   }
 
   templateParser.topSequence(grammarTree)
@@ -538,9 +538,9 @@ func (this *tpT) multiSentenceRuleHead(node *Syntax) (bool, string) {
   case spec_SequenceLabel:
     lbl = left.Lit
   case spec_Label:
-    this.err(left, "expected sequence label instead of ordinary label: '%s'", left, left.Lit)
+    this.err(left, "expected sequence label instead of ordinary label: '%s'", left.Lit)
   case spec_Literal:
-    this.err(left, "expected sequence label instead of literal: '%s'", left, left.Lit)
+    this.err(left, "expected sequence label instead of literal: '%s'", left.Lit)
   case spec_Category:
     this.err(left, "expected sequence label instead of category: '%s'", left.Lit)
   default:
