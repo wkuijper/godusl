@@ -6,6 +6,11 @@ import (
   "fmt"
 )
 
+// A Token represents an ambit that has been identified as lexically relevant
+// and that has been assigned a lexical category. The Lit field is assigned
+// the text of the ambit as a literal string. The Err field is set with a
+// descriptive error message iff the Cat field equals the special error
+// category "ERR".
 type Token struct {
   Cat string
   Lit string
@@ -13,6 +18,10 @@ type Token struct {
   Ambit *Ambit
 }
 
+// A Tokenizer is used for converting an Ambit to a list of Tokens using the Tokenize
+// method or an entire Source to a tree of formatted lists of Tokens using the
+// TokenizeUndent method. The latter method is mainly intended for unit tests and
+// debugging.
 type Tokenizer interface {
   Tokenize(ambit *Ambit) []*Token
   TokenizeUndent(src *Source) *Syntax
@@ -97,6 +106,7 @@ func (this *tokenizer) splitOnError(ambit *Ambit) (*Ambit, *Ambit) {
   return errAmbit, restAmbit
 }
 
+// Tokenize returns the slice of Tokens obtained by scanning the given source ambit.
 func (this *tokenizer) Tokenize(ambit *Ambit) []*Token {
   tokens := make([]*Token, 0, 32)
   for !ambit.IsEmpty() {
@@ -115,6 +125,8 @@ func (this *tokenizer) Tokenize(ambit *Ambit) []*Token {
   return tokens
 }
 
+// Tokenize returns the tree of formatted token lists obtained by first undenting
+// and then scanning the given source.
 func (this *tokenizer) TokenizeUndent(src *Source) *Syntax {
   return Undent(src).mapUnparsedAmbits(func(a *Ambit)string { return fmt.Sprintf("%v", this.Tokenize(a)) })
 }

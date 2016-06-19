@@ -5,16 +5,21 @@ import (
   "io/ioutil"
 )
 
+// A Source object represents a source text loaded into memory for parsing.
+// The Path and LineOffset fields are used in error reporting. For a normal
+// source file LineOffset should be 0.
 type Source struct {
   Path string
   LineOffset int
   Text []byte
 }
 
+// Create a source object from a given string. Useful for unit testing.
 func StringSource(s string) *Source {
   return &Source{ Path: "str", Text: []byte(s) }
 }
 
+// Create a source object by reading in a given filepath.
 func SourceFromPath(path string) (*Source, error) {
   in, err := os.Open(path)
   if err != nil {
@@ -27,6 +32,10 @@ func SourceFromPath(path string) (*Source, error) {
   return &Source{ Path : path, Text : text }, nil
 }
 
+// Compute the line and column values corresponding to a given position
+// (byte-offset) into the source.  Beware that this operation is expensive as
+// it potentially requires scanning the entire source. Calling this repeatedly may
+// lead to quadratic time behaviour.
 func (this *Source) LineColumn(pos int) (int, int) {
   lineNum := 1 + this.LineOffset
   colNum := 0
@@ -52,6 +61,10 @@ func (this *Source) LineColumn(pos int) (int, int) {
   return lineNum, colNum
 }
 
+// Create an ambit that represent the entire source, minus the BOM (byte order mark)
+// if present and minus the first byte if this byte corresponds to a '#'. The latter
+// convention helps ignoring hashbang line and allows DUSL sources to be easily
+// embedded inside a markdown document.
 func (this *Source) FullAmbit() *Ambit {
   text := this.Text
   start := 0
