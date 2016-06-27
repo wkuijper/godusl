@@ -4,6 +4,9 @@ import (
   "fmt"
 )
 
+// Sparser stands for Superpermissive-Parser.
+// The Sparse method converts an ambit into a syntax tree,
+// the SparseUndent method converts an entire source into a syntax tree.
 type Sparser interface {
   Sparse(ambit *Ambit) *Syntax
   SparseUndent(src *Source) *Syntax
@@ -11,13 +14,14 @@ type Sparser interface {
 
 type sparser struct {
   precedenceLevels
-  spanner Spanner
+  spanner spannerI
 }
 
-func newSparser(spanner Spanner, precedence *precedenceLevels) Sparser {
+func newSparser(spanner spannerI, precedence *precedenceLevels) Sparser {
   return &sparser{ spanner: spanner, precedenceLevels: *precedence }
 }
 
+// SparseUndent returns the syntax tree constructed for the given source.
 func (this *sparser) SparseUndent(source *Source) *Syntax {
   root := Undent(source)
   this.sparseSQ(root)
@@ -38,11 +42,12 @@ func (this *sparser) sparseSQ(node *Syntax) {
   // <empty
 }
 
+// Sparse returns the syntax tree constructed for the given ambit.
 func (this *sparser) Sparse(ambit *Ambit) *Syntax {
-  return this.sparse(ambit, this.spanner.Span(ambit), 1)
+  return this.sparse(ambit, this.spanner.span(ambit), 1)
 }
 
-func (this *sparser) sparse(ambit *Ambit, spans []*Span, minPrecedence int) *Syntax {
+func (this *sparser) sparse(ambit *Ambit, spans []*spanT, minPrecedence int) *Syntax {
   ambit, spans = trimSpans(ambit, spans)
   if len(spans) == 0 {
     return &Syntax{ Ambit: ambit }
@@ -153,7 +158,7 @@ func (this *sparser) sparse(ambit *Ambit, spans []*Span, minPrecedence int) *Syn
                   Right: this.sparse(ambit.SubtractLeft(firstSpan.Ambit), spans[1:], minPrecedence) }
 }
 
-func (this *sparser) checkInfixCandidate(spans []*Span, index int, minPrecLeft int, minPrecRight int) bool {  
+func (this *sparser) checkInfixCandidate(spans []*spanT, index int, minPrecLeft int, minPrecRight int) bool {  
   indexRL := index-1
   for indexRL >= 0 {
     span := spans[indexRL]
@@ -206,11 +211,11 @@ func (this *sparser) checkInfixCandidate(spans []*Span, index int, minPrecLeft i
 
 
 
-func trimSpans(ambit *Ambit, spans []*Span) (*Ambit, []*Span) {
+func trimSpans(ambit *Ambit, spans []*spanT) (*Ambit, []*spanT) {
   return trimSpansLeft(trimSpansRight(ambit, spans))
 }
 
-func trimSpansLeft(ambit *Ambit, spans []*Span) (*Ambit, []*Span) {
+func trimSpansLeft(ambit *Ambit, spans []*spanT) (*Ambit, []*spanT) {
   for index, span := range spans {
     if span.Cat != "WS" {
       return ambit, spans[index:]
@@ -220,7 +225,7 @@ func trimSpansLeft(ambit *Ambit, spans []*Span) (*Ambit, []*Span) {
   return ambit, nil
 }
 
-func trimSpansRight(ambit *Ambit, spans []*Span) (*Ambit, []*Span) {
+func trimSpansRight(ambit *Ambit, spans []*spanT) (*Ambit, []*spanT) {
   for index := len(spans)-1; index >= 0; index-- {
     span := spans[index]
     if span.Cat != "WS" {

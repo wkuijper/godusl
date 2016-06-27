@@ -11,26 +11,90 @@ import (
 
 const maxPrecedence = 1000000000
 
+// A Spec object offers a fluent API for specificying a DUSL dialect.
 type Spec interface {
+  // Lexical adds a lexical layer to the language in the form of a Scanner.
+  // The new lexical layer will override existing lexical layers in case of conflicts.
   Lexical(scanner Scanner) Spec
+  // Category adds a lexical category. The name of the category must reflect the name
+  // as it will be returned by the corresponding scanner. The description is used in
+  // error reporting. Note that undeclared lexical labels that are returned by the
+  // underlying Scanner will still get passed on to the tokenizer, spanner and sparser,
+  // however undeclared lexical labels cannot be used in the grammar definition and will
+  // therefore always be rejected by the tracer.
   Category(cat string, desc string) Spec
+  // OperatorAFB adds an operator layer to the language consisting of a (number of)
+  // operator(s) with the argument-functor-brackets binding pattern. This binding
+  // pattern leads to operators that behave as right associative operators. The new
+  // operator layer will have lower precedence than all existing operator layers.
   OperatorAFB(ops ...string) Spec
+  // OperatorBFA adds an operator layer to the language consisting of a (number of)
+  // operator(s) with the brackets-functor-argument binding pattern. This binding
+  // pattern leads to operators that behave as left associative operators. The new
+  // operator layer will have lower precedence than all existing operator layers.
   OperatorBFA(ops ...string) Spec
+  // OperatorEFA adds an operator layer to the language consisting of a (number of)
+  // operator(s) with the empty-functor-argument binding pattern. This binding
+  // pattern leads to operators that behave as prefix operators. The new
+  // operator layer will have lower precedence than all existing operator layers.
   OperatorEFA(ops ...string) Spec
+  // OperatorEFA adds an operator layer to the language consisting of a (number of)
+  // operator(s) with the argument-functor-empty binding pattern. This binding
+  // pattern leads to operators that behave as postfix operators. The new
+  // operator layer will have lower precedence than all existing operator layers.
   OperatorAFE(ops ...string) Spec
+  // OperatorEFE adds an operator layer to the language consisting of a (number of)
+  // operator(s) with the empty-functor-empty binding pattern. This binding
+  // pattern leads to operators that behave as zero-ary operators. The new
+  // operator layer will have lower precedence than all existing operator layers.
   OperatorEFE(ops ...string) Spec
+  // Brackets adds a layer of explicit grouping to the language. The pairs should be
+  // specified by writing the opening bracket token followed by a single blank space
+  // followed by the closing bracket token. As a result, tokens that have spaces in
+  // them are not specifyable as open or close brackets.
   Brackets(pairs ...string) Spec
+  // SequenceLabel introduces a label that can be used to label sequences, that is:
+  // multi-sentence constituents in the grammar.
   SequenceLabel(lbl string, desc string) Spec
+  // SentenceLabel introduces a label that can be used to label sentences, that is:
+  // a head with a possibly indented body-sequence.
   SentenceLabel(lbl string, desc string) Spec
+  // Label introduces an ordinary label that can be used to label intra-sentence
+  // constituents.
   Label(lbl string, desc string) Spec
+  // Literal introduces a symbol that should be interpreted with a given lexical
+  // category rather than being interpreted like a meta-symbol. For example: if we
+  // want, for some reason, to use the identifier "myName" in the grammar as an "ID"
+  // lexical category rather than as a label we can define that using a Literal
+  // clause. Note that, otherwise, the use of "myName" in the grammar will error out
+  // with an undefined-symbol error.
   Literal(lit string, cat string) Spec
+  // ShorthandOperator introduces an shorthand for a given set of operators. The
+  // precedence of the shorthand will be the minimal precedence of all the operators
+  // given. Using a shorthand is more than just a convenience, because the resulting
+  // grammar will use hashtables instead of linear lists to represent the templates,
+  // the latter will be more efficient for rules that have to match against a whole
+  // bunch of operators.
   ShorthandOperator(op string, ops ...string) Spec
+  // Grammar always constitutes the final call in the fluent API that is the Spec
+  // interface. It introduces a single string literal (usually specified using go's
+  // multiline string syntax: `...`) that contains the grammar rules for the top
+  // down deterministic finite tree automaton (Tracer). This call, when successful,
+  // returns a Lang object which contains all the stages: Tokenizer, Sparser
+  // and Tracer which is a synthesis of all the entire specification.
+  // It is recommended to unit-test all these stages separately in order
+  // to build up complexity slowly and get fail-early behaviour which gives you much
+  // better feedback when something in your lanugage is not working as it should.
   Grammar(grammar string) (Lang, error)
 }
 
+// A Lang object represents a fully specified DUSL dialect, it contains the Tokenizer,
+// Sparser and Tracer for your language.
+// It is recommended to unit-test all these stages separately in order
+// to build up complexity slowly and get fail-early behaviour which gives you much
+// better feedback when something in your language is not working as it should.
 type Lang interface {
   Tokenizer() Tokenizer
-  Spanner() Spanner
   Sparser() Sparser
   Tracer() Tracer
 }
@@ -43,17 +107,12 @@ type spec struct {
 
 type lang struct {
   tokenizer Tokenizer
-  spanner Spanner
   sparser Sparser
   tracer Tracer
 }
 
 func (this *lang) Tokenizer() Tokenizer {
   return this.tokenizer
-}
-
-func (this *lang) Spanner() Spanner {
-  return this.spanner
 }
 
 func (this *lang) Sparser() Sparser {
@@ -451,7 +510,7 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
   sparser := newSparser(spanner, precedence)
   tracer := newTracer(sparser, templateParser.templates, descriptions)
 
-  return &lang{ tokenizer: tokenizer, spanner: spanner, sparser: sparser, tracer: tracer }, nil
+  return &lang{ tokenizer: tokenizer, sparser: sparser, tracer: tracer }, nil
 }
 
 type tpT struct {

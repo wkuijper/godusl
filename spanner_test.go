@@ -11,10 +11,10 @@ func TestSpanner(t *testing.T) {
   ambit := source.FullAmbit()
   scanner :=
     &seqScanner{master: PrefixScanner("OP += ===", "OB <% ( [ {", "CB } ] ) %>"),
-                slave: NewDefaultScanner()}
+                slave: DefaultScanner}
 
   spanner := newSpanner(newTokenizer(scanner), map[string]int{ "<% %>":1, "( )":1, "[ }":1 })
-  spans := spanner.Span(ambit)
+  spans := spanner.span(ambit)
   if len(spans) != 3 {
     t.Log("len(spans) ==", len(spans))
     t.Fail()

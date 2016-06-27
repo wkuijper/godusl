@@ -17,7 +17,7 @@ func main() {
 
 func doIt(args []string) error {
   if len(args) < 2 || len(args) > 2 {
-    return fmt.Errorf("usage: scriipt <verb> <filepath>\nverbs: undent, undent-raw, tokenize, tokenize-raw, span, span-raw, sparse, sparse-raw, trace, trace-raw, parse, parse-raw, run")
+    return fmt.Errorf("usage: scriipt <verb> <filepath>\nverbs: undent, undent-raw, tokenize, tokenize-raw, sparse, sparse-raw, trace, trace-raw, parse, parse-raw, run")
   }
   verb, path := args[0], args[1]
   text, err := ioutil.ReadFile(path)
@@ -30,8 +30,6 @@ func doIt(args []string) error {
     undent(src, true)
   case "tokenize", "tokenize-pretty":
     tokenize(src, true)
-  case "span", "span-pretty":
-    span(src, true)
   case "sparse", "sparse-pretty":
     sparse(src, true)
   case "trace", "trace-pretty":
@@ -40,8 +38,6 @@ func doIt(args []string) error {
     undent(src, false)
   case "tokenize-raw":
     tokenize(src, false)
-  case "span-raw":
-    span(src, false)
   case "sparse-raw":
     sparse(src, false)
   case "trace-raw":
@@ -75,11 +71,6 @@ func undent(src *dusl.Source, pretty bool) {
 
 func tokenize(src *dusl.Source, pretty bool) {
   syn := scriipt.Lang.Tokenizer().TokenizeUndent(src)
-  syn.Dump(os.Stdout, "", pretty)
-}
-
-func span(src *dusl.Source, pretty bool) {
-  syn := scriipt.Lang.Spanner().SpanUndent(src)
   syn.Dump(os.Stdout, "", pretty)
 }
 

@@ -3,9 +3,10 @@ package dusl
 import (
   "io"
   "fmt"
-  "bytes"
 )
 
+// A tracer represents a top down deterministic finite tree automaton that can be
+// used to convert ambits or entire sources to traces.
 type Tracer interface {
   Trace(ambit *Ambit, lbl string) *Trace
   TraceUndent(source *Source, lbl string) *Trace
@@ -18,6 +19,14 @@ type tracer struct {
   descriptions map[string]string
 }
 
+// A node in an acceptance trace of a top down deterministic finite tree automaton.
+// The Lbl field containsthe label for the current tree automaton state,
+// the Idx field contains the index of the transition rule that was applied,
+// the Syn field refers to the current node of the syntax tree over which the tree
+// automaton was run, the Subs field contains the subtraces in order of a
+// left-to-right traversal of the transition rule template.
+// If there was no rule that could be applied the Lbl will be "ERR" and the Err field
+// will contain a descriptive error message.
 type Trace struct {
   Lbl string
   Idx int
@@ -47,10 +56,8 @@ type waitingT struct {
   list []waitingItemT
 }
 
-func (this *Trace) ToString() string {
-  buf := new(bytes.Buffer)
-  this.Dump(buf, "", true)
-  return buf.String()
+func (this *Trace) DumpToString() string {
+  return dumpToString(this)
 }
 
 func (this *Trace) Dump(out io.Writer, prfx string, pretty bool) {
@@ -90,14 +97,14 @@ func (this *Trace) dumpRaw(out io.Writer, prfx string) {
 }
 
 func (this *Trace) ErrorN(n int) error {
-  return errorN(this.Errors(), n)
+  return SummaryError(this.errors(), n)
 }
 
-func (this *Trace) Errors() []error {
+func (this *Trace) errors() []error {
   if this == nil {
     return nil
   }
-  errs := this.Syn.Errors()
+  errs := this.Syn.errors()
   return this.gatherErrors(errs)
 }
 
@@ -106,7 +113,7 @@ func (this *Trace) gatherErrors(errs []error) []error {
     return errs
   }
   if this.Lbl == "ERR" {
-    return append(errs, fmt.Errorf("%s: %s", this.Syn.Ambit.Location(), this.Err))
+    return append(errs, AmbitError(this.Syn.Ambit, this.Err))
   }
   for _, sub := range this.Subs {
     errs = sub.gatherErrors(errs)

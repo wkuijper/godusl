@@ -5,31 +5,31 @@ import (
   "bytes"
 )
 
-type Dumper interface {
+type simpleDumper interface {
   Dump(out io.Writer)
 }
 
-type PrettyDumper interface {
+type prettyDumper interface {
   Dump(out io.Writer, pretty bool)
 }
 
-type PrefixDumper interface {
+type prefixDumper interface {
   Dump(out io.Writer, prfx string)
 }
 
-type PrefixPrettyDumper interface {
+type prefixPrettyDumper interface {
   Dump(out io.Writer, prfx string, pretty bool)
 }
 
-func Dump2String(thing interface{}) string {
+func dumpToString(thing interface{}) string {
   buf := new(bytes.Buffer)
-  if dumper, ok := thing.(Dumper); ok {
+  if dumper, ok := thing.(simpleDumper); ok {
     dumper.Dump(buf)
-  } else if dumper, ok := thing.(PrettyDumper); ok {
+  } else if dumper, ok := thing.(prettyDumper); ok {
     dumper.Dump(buf, true)
-  } else if dumper, ok := thing.(PrefixDumper); ok {
+  } else if dumper, ok := thing.(prefixDumper); ok {
     dumper.Dump(buf, "")
-  } else if dumper, ok := thing.(PrefixPrettyDumper); ok {
+  } else if dumper, ok := thing.(prefixPrettyDumper); ok {
     dumper.Dump(buf, "", true)
   }
   return buf.String()

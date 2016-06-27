@@ -119,7 +119,13 @@ func (this *compScan) Reset() {
   this.scan2.Reset()
 }
 
-var SimpleStringScanner Scanner = &simpleStringScanner{}
+// The SimpleStringScanner scans for double quoted string literals, 
+// It recognizes escape sequences backslash-doublequote,
+// backslash-backslash, backslash-n(ewline), backslash-r(eturn) and backslash-t(ab).
+// It also recognizes raw string literals that start with a backtick and end at the
+// end-of-line, in that case nothing needs to be escaped (not even the backtick itself).
+// This scanner only reports the lexical category: "STR".
+var SimpleStringScanner Scanner
 
 type simpleStringScanner struct {}
 
@@ -134,6 +140,8 @@ type simpleStringScan struct {
 func (this *simpleStringScan) Consume(r rune) (string, bool) {
   const (
     INIT = iota // convention requires: INIT == 0
+    RAW
+    RAW_R
     INSIDE
     ESCAPE
     NOMORE
@@ -142,6 +150,9 @@ func (this *simpleStringScan) Consume(r rune) (string, bool) {
   case INIT:
     if r == '"' {
       this.state = INSIDE
+      return "", true
+    } else if r == '`' {
+      this.state = RAW
       return "", true
     } else {
       this.state = NOMORE
@@ -165,6 +176,23 @@ func (this *simpleStringScan) Consume(r rune) (string, bool) {
     default:
       return "", false
     }
+  case RAW:
+    if r == '\r' {
+      this.state = RAW_R
+      return "STR", true
+    } else if r == '\n' {
+      this.state = NOMORE
+      return "STR", false
+    } else {
+      return "", true
+    }
+  case RAW_R:
+    if r == '\n' {
+      this.state = NOMORE
+      return "STR", false
+    } else {
+      return "", false
+    }
   }
   return "", false 
 }
@@ -173,7 +201,10 @@ func (this *simpleStringScan) Reset() {
   this.state = 0
 }
 
-var SimpleDecimalNumScanner Scanner = &simpleDecimalNumScanner{}
+// SimpleDecimalNumScanner scans numbers in decimal notation. 
+// No fractions, exponents, base 2, 8 or 16 notations are supported by this simple scanner.
+// This scanner reports only the lexical category "NUM"
+var SimpleDecimalNumScanner Scanner
 
 type simpleDecimalNumScanner struct {}
 
@@ -218,7 +249,10 @@ func (this *simpleDecimalNumScan) Reset() {
   this.state = 0
 }
 
-var SimpleIdentifierScanner Scanner = &simpleIdentifierScanner{}
+// SimpleIdentifierScanner scans simple ASCII based identifiers
+// starting with a '_' or roman letter and containing only '_' or roman alphanumerics.
+// This scanner reports only the lexical category "ID".
+var SimpleIdentifierScanner Scanner
 
 type simpleIdentifierScanner struct {}
 
@@ -260,7 +294,10 @@ func (this *simpleIdentifierScan) Reset() {
   this.state = 0
 }
 
-var SimpleBaseScanner = &simpleBaseScanner{}
+// SimpleBaseScanner recognizes ASCII whitespace,
+// and comments starting with a hash-sign, ending at end-of-line.
+// The simplebase scanner returns lexical category "WS" (for whitespace) 
+var SimpleBaseScanner Scanner
 
 type simpleBaseScanner struct {}
 
@@ -316,7 +353,13 @@ func (this *simpleBaseScan) Reset() {
   this.state = 0
 }
 
-func PrefixScanner(descs ...string) *prfxTree {
+// A PrefixScanner works as a prefixtree: for a set of fixed length tokens 
+// it will return the associated lexical category.
+// The scanner is defined by giving a set of descriptions, each description
+// consists of a category name followed by a space followed by a list of
+// token literals that are to be recognized (also separated by single spaces).
+// For example: PrefixScanner("ID a b c", "NUM 1 2 3", "OP + - *")
+func PrefixScanner(descs ...string) Scanner {
   prfxTree := &prfxTree{}
   for _, desc := range descs {
     parts := strings.Split(desc, " ")
@@ -331,13 +374,22 @@ func PrefixScanner(descs ...string) *prfxTree {
   return prfxTree
 }
 
-func NewDefaultScanner() Scanner {
-  return composeScanners(SimpleBaseScanner, 
-                         SimpleStringScanner, 
-                         SimpleIdentifierScanner,
-                         SimpleDecimalNumScanner)
-}
+// The DefaultScanner is composed of the SimpleBaseScanner, 
+// the SimpleStringScanner, the SimpleIdentifierScanner and the 
+// SimpleDecimalNumScanner.
+// As such it reports the lexical categories: "WS", "STR", "ID", and "NUM".
+var DefaultScanner Scanner
 
+func init() {
+  SimpleStringScanner = &simpleStringScanner{} 
+  SimpleDecimalNumScanner = &simpleDecimalNumScanner{}
+  SimpleIdentifierScanner = &simpleIdentifierScanner{}
+  SimpleBaseScanner = &simpleBaseScanner{}
+  DefaultScanner = composeScanners(SimpleBaseScanner, 
+                                   SimpleStringScanner, 
+                                   SimpleIdentifierScanner,
+                                   SimpleDecimalNumScanner)
+}
 
 type metaSymbolScannerT struct {}
 

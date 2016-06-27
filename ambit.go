@@ -12,9 +12,9 @@ type Ambit struct {
   End int
 }
 
-// StringAmbit creates an Ambit representing a given string. Useful for unit testing.
-func StringAmbit(s string) *Ambit {
-  return StringSource(s).FullAmbit()
+// AmbitFromString creates an Ambit representing a given string. Useful for unit testing.
+func AmbitFromString(s string) *Ambit {
+  return SourceFromString(s).FullAmbit()
 }
 
 func (this *Ambit) String() string {
@@ -108,12 +108,12 @@ func (this *Ambit) From(i int) *Ambit {
   return &Ambit{ Source: this.Source, Start: min(i, this.End), End: this.End }
 }
 
-// CollapseLeft returns the empty ambit that starts and end where this ambit starts.
+// CollapseLeft returns the empty ambit that ends (and starts) where this ambit starts.
 func (this *Ambit) CollapseLeft() *Ambit {
   return &Ambit{ Source: this.Source, Start: this.Start, End: this.Start }
 }
 
-// CollapseRight returns the empty ambit that starts and end where this ambit ends.
+// CollapseRight returns the empty ambit that starts (and ends) where this ambit ends.
 func (this *Ambit) CollapseRight() *Ambit {
   return &Ambit{ Source: this.Source, Start: this.End, End: this.End }
 }

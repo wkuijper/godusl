@@ -14,13 +14,13 @@ func TestParser(t *testing.T) {
         printf(-x, x)
       else
         print()`
-  tree, err := Parse(dusl.StringSource(s))
+  tree, err := Parse(dusl.SourceFromString(s))
   if err != nil {
     t.Log(err.Error())
     t.Fail()
     return
   }
-  r := dusl.Dump2String(tree)
+  r := dumpToString(tree)
   if r != `for x = 0; (x < 20); x++
   if (x > 10)
     print(x)

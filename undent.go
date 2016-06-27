@@ -4,6 +4,7 @@ import (
   "fmt"
 )
 
+// Undent transforms a source text into a syntax tree of unparsed sentences.
 func Undent(src *Source) *Syntax {
   ambit := src.FullAmbit()
   return undent(ambit)

@@ -7,7 +7,7 @@ import (
 
 func TestLanguage(t *testing.T) {
   lang, err := NewSpec().
-    Lexical(NewDefaultScanner()).
+    Lexical(DefaultScanner).
     Category("NUM", "number").
     Category("ID", "identifier").
     Category("STR", "string").

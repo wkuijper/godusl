@@ -125,7 +125,7 @@ func (this *tokenizer) Tokenize(ambit *Ambit) []*Token {
   return tokens
 }
 
-// Tokenize returns the tree of formatted token lists obtained by first undenting
+// TokenizeUndent returns the tree of formatted token lists obtained by first undenting
 // and then scanning the given source.
 func (this *tokenizer) TokenizeUndent(src *Source) *Syntax {
   return Undent(src).mapUnparsedAmbits(func(a *Ambit)string { return fmt.Sprintf("%v", this.Tokenize(a)) })

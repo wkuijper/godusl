@@ -9,7 +9,7 @@ var Lang dusl.Lang
 func init() {
   var err error
   Lang, err = dusl.NewSpec().
-    Lexical(dusl.NewDefaultScanner()).
+    Lexical(dusl.DefaultScanner).
     Category("ID", "identifier").
     Category("NUM", "number").
     Category("STR", "string").

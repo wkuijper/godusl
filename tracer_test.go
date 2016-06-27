@@ -7,7 +7,7 @@ import (
 
 func TestTracer(t *testing.T) {
 	lang, err := NewSpec().
-		Lexical(NewDefaultScanner()).
+		Lexical(DefaultScanner).
 		Category("ID", "identifier").
 		Category("NUM", "number").
 		Category("STR", "string").

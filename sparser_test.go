@@ -8,7 +8,7 @@ import (
 func TestSparser(t *testing.T) {
 
 	lang, err := NewSpec().
-		Lexical(NewDefaultScanner()).
+		Lexical(DefaultScanner).
 		OperatorEFA("+", "-").
 		OperatorBFA("+", "-").
 		Brackets("( )").
@@ -54,7 +54,7 @@ func TestSparser(t *testing.T) {
 func TestSparserUndent(t *testing.T) {
 
 	lang, err := NewSpec().
-		Lexical(NewDefaultScanner()).
+		Lexical(DefaultScanner).
 		OperatorEFA("+", "-").
 		OperatorBFA("+", "-").
 		Brackets("( )").

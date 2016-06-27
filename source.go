@@ -14,8 +14,8 @@ type Source struct {
   Text []byte
 }
 
-// Create a source object from a given string. Useful for unit testing.
-func StringSource(s string) *Source {
+// SourceFromString creates a source object from a given string. Useful for unit testing.
+func SourceFromString(s string) *Source {
   return &Source{ Path: "str", Text: []byte(s) }
 }
 

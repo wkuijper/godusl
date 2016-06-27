@@ -3,7 +3,6 @@ package dusl
 import (
   "io"
   "fmt"
-  "bytes"
 )
 
 type Syntax struct {
@@ -28,10 +27,8 @@ func (this *Syntax) mapUnparsedAmbits(f func(ambit *Ambit)string) *Syntax {
                        Right: this.Right.mapUnparsedAmbits(f) }
 }
 
-func (this *Syntax) ToString() string {
-  buf := new(bytes.Buffer)
-  this.Dump(buf, "", true)
-  return buf.String()
+func (this *Syntax) DumpToString() string {
+  return dumpToString(this)
 }
 
 func (this *Syntax) Dump(out io.Writer, prfx string, pretty bool) {
@@ -64,7 +61,7 @@ func (this *Syntax) dumpPretty(out io.Writer, prfx string) {
   lit := this.Lit
   if cat == "UN" {
     if lit == "" {
-      fmt.Fprintf(out, "%s%s\n", prfx, this.Ambit.ToString())
+      fmt.Fprintf(out, "%s%s", prfx, this.Ambit.ToString())
     } else {
       fmt.Fprintf(out, "%s%s\n", prfx, lit)
     }
@@ -88,11 +85,13 @@ func (this *Syntax) dumpRaw(out io.Writer, prfx string) {
   if this.Right != nil { this.Right.dumpRaw(out, prfx + "  ") }
 }
 
+// Returns a SummaryError for the first n errors found in the tree or nil
+// of there were no errors.
 func (this *Syntax) ErrorN(n int) error {
-  return errorN(this.Errors(), n)
+  return SummaryError(this.errors(), n)
 }
 
-func (this *Syntax) Errors() []error {
+func (this *Syntax) errors() []error {
   return this.gatherErrors(nil)
 }
 
@@ -101,57 +100,44 @@ func (this *Syntax) gatherErrors(errs []error) []error {
     return errs
   }
   if this.Cat == "ERR" {
-    return append(errs, fmt.Errorf("%s: %s", this.Ambit.Location(), this.Err))
+    return append(errs, AmbitError( this.Ambit, this.Err))
   }
   errs = this.Left.gatherErrors(errs)
   errs = this.Right.gatherErrors(errs)
   return errs
 }
 
+// IsEmpty iff Cat == ""
 func (this *Syntax) IsEmpty() bool {
   return this.Cat == ""
 }
 
+// IsZeroaryOp iff left and right are empty.
+// Give empty string to lit to wildcard match any literal.
 func (this *Syntax) IsZeroaryOp(lit string) bool {
-  if this.Cat != "OP" {
-    return false
-  }
-  if this.Left.Cat != "" || this.Right.Cat != "" {
-    return false
-  }
-  return this.Lit == lit
+  return this.Cat == "OP" && this.Left.IsEmpty() && this.Right.IsEmpty() && (lit == "" || this.Lit == lit)
 }
 
+// IsPrefiOp iff left is not empty and right is empty.
+// Give empty string to lit to wildcard match any literal.
 func (this *Syntax) IsPrefixOp(lit string) bool {
-  if this.Cat != "OP" {
-    return false
-  }
-  if this.Left.Cat != "" || this.Right.Cat == "" {
-    return false
-  }
-  return this.Lit == lit
+  return this.Cat == "OP" && this.Left.IsEmpty() && !this.Right.IsEmpty() && (lit == "" || this.Lit == lit)
 }
 
+// IsPostfixOp iff left is empty and right is not empty.
+// Give empty string to lit to wildcard match any literal.
 func (this *Syntax) IsPostfixOp(lit string) bool {
-  if this.Cat != "OP" {
-    return false
-  }
-  if this.Left.Cat == "" || this.Right.Cat != "" {
-    return false
-  }
-  return this.Lit == lit
+  return this.Cat == "OP" && !this.Left.IsEmpty() && this.Right.IsEmpty() && (lit == "" || this.Lit == lit)
 }
 
+// IsInfixOp iff left and right are not empty.
+// Give empty string to lit to wildcard match any literal.
 func (this *Syntax) IsInfixOp(lit string) bool {
-  if this.Cat != "OP" {
-    return false
-  }
-  if this.Left.Cat == "" || this.Right.Cat == "" {
-    return false
-  }
-  return this.Lit == lit
+  return this.Cat == "OP" && !this.Left.IsEmpty() && !this.Right.IsEmpty() && (lit == "" || this.Lit == lit)
 }
 
+// Return the first node in a pre--order, left to right traversal that match cat and lit.
+// Give an empty string to either argument for wildcard match.
 func (this *Syntax) First(cat, lit string) *Syntax {
   if this == nil {
     return nil
@@ -166,6 +152,9 @@ func (this *Syntax) First(cat, lit string) *Syntax {
   return this.Right.First(cat, lit)
 }
 
+// Return the first N nodes in a pre--order, left to right traversal that match cat and lit.
+// Give an empty string to either argument for wildcard match.
+// Give negative N for getting all nodes that match.
 func (this *Syntax) FirstN(cat, lit string, n int) []*Syntax {
   list := make([]*Syntax, 0, max(n, 1))
   return this.listFirstN(list, cat, lit, n)

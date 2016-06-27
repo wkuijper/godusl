@@ -11,7 +11,7 @@ func TestTokens(t *testing.T) {
   ambit := source.FullAmbit()
   scanner :=
     &seqScanner{PrefixScanner("OP +=", "OP ===", "OB ( [ { <%", "CB } ] ) %>"),
-                NewDefaultScanner()}
+                DefaultScanner}
 
   tokenizer := newTokenizer(scanner)
   tokens := tokenizer.Tokenize(ambit)

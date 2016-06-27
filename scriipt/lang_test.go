@@ -8,13 +8,12 @@ import (
 
 func TestLang(t *testing.T) {
   testTokenizer(Lang.Tokenizer(), t)
-  testSpanner(Lang.Spanner(), t)
   testSparser(Lang.Sparser(), t)
   testTracer(Lang.Tracer(), t)
 }
 
 func testTokenizer(tokenizer dusl.Tokenizer, t *testing.T) {
-  r := fmt.Sprintf("%v", tokenizer.Tokenize(dusl.StringAmbit("a + b { -1 if [then] else() }")))
+  r := fmt.Sprintf("%v", tokenizer.Tokenize(dusl.AmbitFromString("a + b { -1 if [then] else() }")))
   if r != "[ID:a WS OP:+ WS ID:b WS OB:{ WS OP:- NUM:1 WS OP:if WS OB:[ ID:then CB:] WS OP:else OB:( CB:) WS CB:}]" {
     t.Log(r)
     t.Fail()
@@ -22,17 +21,8 @@ func testTokenizer(tokenizer dusl.Tokenizer, t *testing.T) {
   }
 }
 
-func testSpanner(spanner dusl.Spanner, t *testing.T) {
-  r := fmt.Sprintf("%v", spanner.Span(dusl.StringAmbit("a + b { -1 if [then] else() }")))
-  if r != "[ID:a WS OP:+ WS ID:b WS {WS OP:- NUM:1 WS OP:if WS [ID:then] WS OP:else BB:( ) WS}]" {
-    t.Log(r)
-    t.Fail()
-    return
-  }
-}
-
 func testSparser(sparser dusl.Sparser, t *testing.T) {
-  r := sparser.Sparse(dusl.StringAmbit("a + b { -1 if [then] else() }")).ToString()
+  r := sparser.Sparse(dusl.AmbitFromString("a + b { -1 if [then] else() }")).DumpToString()
   if r != `OP:+
   ID:a
   JUXT: 
@@ -69,7 +59,7 @@ func testTracer(tracer dusl.Tracer, t *testing.T) {
         printf(-x, x)
       else
         print()`
-  r := tracer.TraceUndent(dusl.StringSource(s), "S").ToString()
+  r := tracer.TraceUndent(dusl.SourceFromString(s), "S").DumpToString()
   if r != `S:1:
   hdr:1:;
     s:1:=
