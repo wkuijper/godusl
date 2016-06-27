@@ -398,15 +398,17 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
     if trimmedSymb != symb {
       return nil, fmt.Errorf("leading/trailing whitespace in %s: '%s'", symbol.typName(), symb)
     }
-    for i, c := range symb {
-      if (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_' {
-        continue
+    if symbol.typ != spec_ShorthandOperator {
+      for i, c := range symb {
+        if (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_' {
+          continue
+        }
+        if i > 0 && (c >= '0' && c <= '9') {
+          continue
+        }
+        return nil, fmt.Errorf("unexpected symbol in %s: '%s***HERE***%s'",
+                               symbol.typName(), symb[:i], symb[i:])
       }
-      if i > 0 && (c >= '0' && c <= '9') {
-        continue
-      }
-      return nil, fmt.Errorf("unexpected symbol in %s: '%s***HERE***%s'",
-                             symbol.typName(), symb[:i], symb[i:])
     }
     for reservedSymb, reservedSymbName := range reserved {
       if symb == reservedSymb {

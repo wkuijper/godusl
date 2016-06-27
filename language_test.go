@@ -38,12 +38,12 @@ func TestLanguage(t *testing.T) {
     SequenceLabel("S", "statement").
     SequenceLabel("E", "else continuation statement").
 
-    ShorthandOperator("prfx", "-", "+", "*", "&", "!", "^").
-    ShorthandOperator("infix", "prfx", "/", "%", "<<", ">>", "&^", "|",
+    ShorthandOperator("prfx~", "-", "+", "*", "&", "!", "^").
+    ShorthandOperator("~infix~", "prfx~", "/", "%", "<<", ">>", "&^", "|",
                                "==", "!=", "<", "<=", ">=", ">", "&&", "||").
     
     Grammar(`
-      x is> ID or> NUM or> STR or> (x) or> x(args) or> prfx x or> x infix x
+      x is> ID or> NUM or> STR or> (x) or> x(args) or> prfx~ x or> x ~infix~ x
 
       xs is> x, xs or> x
       args is> <empty or> xs

@@ -44,9 +44,9 @@ func init() {
     SequenceLabel("S", "statement").
     SequenceLabel("E", "else continuation statement").
 
-    ShorthandOperator("prfx_", "-", "+").
-    ShorthandOperator("_postfx", "--", "++").
-    ShorthandOperator("_infix_", "-", "+", "*", "/", "==", "!=", "<", "<=", ">=", ">", "&&", "||").
+    ShorthandOperator("prfx~", "-", "+").
+    ShorthandOperator("~postfx", "--", "++").
+    ShorthandOperator("~infix~", "-", "+", "*", "/", "==", "!=", "<", "<=", ">=", ">", "&&", "||").
     
     Grammar(`
     
@@ -65,9 +65,9 @@ func init() {
             or> STR
             or> (x)
             or> f(args)
-            or> prfx_ x
-            or> x _postfx
-            or> x _infix_ x
+            or> prfx~ x
+            or> x ~postfx
+            or> x ~infix~ x
             or> true
             or> false
       
