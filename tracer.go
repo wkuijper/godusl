@@ -56,8 +56,8 @@ type waitingT struct {
   list []waitingItemT
 }
 
-func (this *Trace) DumpToString() string {
-  return dumpToString(this)
+func (this *Trace) DumpToString(pretty bool) string {
+  return dumpToString(this, pretty)
 }
 
 func (this *Trace) Dump(out io.Writer, prfx string, pretty bool) {
@@ -72,7 +72,11 @@ func (this *Trace) dumpPretty(out io.Writer, prfx string) {
   if this == nil {
     return
   }
-  fmt.Fprintf(out, "%s%s:%d:%s\n", prfx, this.Lbl, this.Idx, this.Syn.Lit)
+  if this.Err != "" {
+    fmt.Fprintf(out, "%s%s:%d:%s\n", prfx, this.Lbl, this.Idx, this.Err)
+  } else {
+    fmt.Fprintf(out, "%s%s:%d:%s\n", prfx, this.Lbl, this.Idx, this.Syn.Lit)
+  }
   subs := this.Subs
   if len(subs) > 0 {
     subPrfx := prfx + "  "

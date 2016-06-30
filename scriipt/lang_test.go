@@ -22,7 +22,7 @@ func testTokenizer(tokenizer dusl.Tokenizer, t *testing.T) {
 }
 
 func testSparser(sparser dusl.Sparser, t *testing.T) {
-  r := sparser.Sparse(dusl.AmbitFromString("a + b { -1 if [then] else() }")).DumpToString()
+  r := sparser.Sparse(dusl.AmbitFromString("a + b { -1 if [then] else() }")).DumpToString(true)
   if r != `OP:+
   ID:a
   JUXT: 
@@ -33,13 +33,13 @@ func testSparser(sparser dusl.Sparser, t *testing.T) {
         JUXT: 
           NUM:1
           JUXT: 
-            ERR:
+            ERR:unexpected: if
             JUXT: 
               BB:[ ]
                 ID:then
                 :
               GLUE:
-                ERR:
+                ERR:unexpected: else
                 BB:( )
                   :
                   :
@@ -59,11 +59,11 @@ func testTracer(tracer dusl.Tracer, t *testing.T) {
         printf(-x, x)
       else
         print()`
-  r := tracer.TraceUndent(dusl.SourceFromString(s), "S").DumpToString()
+  r := tracer.TraceUndent(dusl.SourceFromString(s), "S").DumpToString(true)
   if r != `S:1:
   hdr:1:;
     s:1:=
-      ERR:0: 
+      ERR:0:expected: variable name
       x:1:0
     x:7:<
       x:0:x

@@ -27,8 +27,8 @@ func (this *Syntax) mapUnparsedAmbits(f func(ambit *Ambit)string) *Syntax {
                        Right: this.Right.mapUnparsedAmbits(f) }
 }
 
-func (this *Syntax) DumpToString() string {
-  return dumpToString(this)
+func (this *Syntax) DumpToString(pretty bool) string {
+  return dumpToString(this, pretty)
 }
 
 func (this *Syntax) Dump(out io.Writer, prfx string, pretty bool) {

@@ -20,7 +20,7 @@ func TestParser(t *testing.T) {
     t.Fail()
     return
   }
-  r := dumpToString(tree)
+  r := dumpToString(tree, true)
   if r != `for x = 0; (x < 20); x++
   if (x > 10)
     print(x)
