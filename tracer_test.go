@@ -27,7 +27,8 @@ func TestTracer(t *testing.T) {
         
       XSN is> X
      
-      X is> (X) or> NUM or> ID or> const X or> +X or> -X or> X + X or> X - X`)
+      X is> (X) or> NUM or> ID or> const X
+      X is> +X or> -X or> X + X or> X - X`)
 
 	if err != nil {
 		t.Log(err)
@@ -39,7 +40,7 @@ func TestTracer(t *testing.T) {
         
 	text := []byte(`1 + +(5 --4) + x`)
 	source := &Source{Path: "tst", Text: text}
-
+        
 	trace := tracer.TraceUndent(source, "XSQ")
 
 	buf := new(bytes.Buffer)

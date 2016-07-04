@@ -14,7 +14,7 @@ func TestLang(t *testing.T) {
 
 func testTokenizer(tokenizer dusl.Tokenizer, t *testing.T) {
   r := fmt.Sprintf("%v", tokenizer.Tokenize(dusl.AmbitFromString("a + b { -1 if [then] else() }")))
-  if r != "[ID:a WS OP:+ WS ID:b WS OB:{ WS OP:- NUM:1 WS OP:if WS OB:[ ID:then CB:] WS OP:else OB:( CB:) WS CB:}]" {
+  if r != "[ID:a WS OP:+ WS ID:b WS OB:{ WS OP:- NUM:1 WS ID:if WS OB:[ ID:then CB:] WS ID:else OB:( CB:) WS CB:}]" {
     t.Log(r)
     t.Fail()
     return
@@ -33,13 +33,13 @@ func testSparser(sparser dusl.Sparser, t *testing.T) {
         JUXT: 
           NUM:1
           JUXT: 
-            ERR:unexpected: if
+            ID:if
             JUXT: 
               BB:[ ]
                 ID:then
                 :
               GLUE:
-                ERR:unexpected: else
+                ID:else
                 BB:( )
                   :
                   :

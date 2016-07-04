@@ -23,11 +23,16 @@ func init() {
     OperatorBFA("||").
     OperatorBFA(",").
     OperatorBFA("=").
-    OperatorEFE("noop").
+    //OperatorEFE("noop").
     OperatorBFA(";").
-    OperatorEFA("if", "else", "for").
-    OperatorEFE("else").
+    //OperatorEFA("if", "else", "for").
+    //OperatorEFE("else").
     Brackets("( )", "[ ]", "{ }").
+
+    Literal("if", "ID").
+    Literal("else", "ID").
+    Literal("for", "ID").
+    Literal("noop", "ID").
     
     Label("x", "expression").
     Label("args", "argument list").

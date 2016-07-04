@@ -702,6 +702,12 @@ func (this *tpT) possiblyEmptyIntraSentenceTemplate(node *Syntax) *templateT {
     }
     return nil
   }
+  if node.Cat == "JUXT" {
+    if subNode := node.First("", "or>"); subNode != nil {
+      this.err(node, "juxtaposition cannot occur before or> in the same sentence")
+      return nil
+    }
+  }
   if node.IsZeroaryOp("<empty") {
     return &templateT{ matchCat: true, cat: "" }
   }

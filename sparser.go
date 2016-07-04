@@ -76,6 +76,13 @@ func (this *sparser) sparse(ambit *Ambit, spans []*spanT, minPrecedence int) *Sy
                     Right: &Syntax{ Ambit: span.Ambit.CollapseRight() } }
   }
   l, splitPrecedence, splitLoc, splitPrecLeft, splitPrecRight := len(spans)-1, maxPrecedence+1, -1, -1, -1
+  if span, ws := spans[0], spans[1]; span.Cat != "OP" && ws.Cat == "WS" {
+    if len(spans) == 2 || (spans[2].Cat != "OP" && spans[2].Cat != "ERR") {
+      return &Syntax{ Cat: "JUXT", Lit: " ", Ambit: ambit, OpAmbit: ws.Ambit,
+                      Left: this.sparse(span.Ambit, spans[:1], minPrecedence),
+                      Right: this.sparse(ambit.SubtractLeft(ws.Ambit), spans[1:], minPrecedence) }
+    }
+  }
   if span := spans[0]; span.Cat == "OP" {
     lit := span.Lit
     prec := this.precedenceEFA[lit]
