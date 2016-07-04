@@ -77,7 +77,23 @@ func (this *sparser) sparse(ambit *Ambit, spans []*spanT, minPrecedence int) *Sy
   }
   l, splitPrecedence, splitLoc, splitPrecLeft, splitPrecRight := len(spans)-1, maxPrecedence+1, -1, -1, -1
   if span, ws := spans[0], spans[1]; span.Cat != "OP" && ws.Cat == "WS" {
-    if len(spans) == 2 || (spans[2].Cat != "OP" && spans[2].Cat != "ERR") {
+    juxtaposition := false
+    if len(spans) == 2 {
+      juxtaposition = true
+    } else {
+      cat := spans[2].Cat
+      if cat != "ERR" {
+        if cat != "OP" {
+          juxtaposition = true
+        } else {
+          lit := spans[2].Lit
+          if this.precedenceEFA[lit] == 0 && this.precedenceAFE[lit] == 0 && this.precedenceAFB[lit] == 0 && this.precedenceBFA[lit] == 0 {
+            juxtaposition = true
+          }
+        }
+      }
+    }
+    if juxtaposition {
       return &Syntax{ Cat: "JUXT", Lit: " ", Ambit: ambit, OpAmbit: ws.Ambit,
                       Left: this.sparse(span.Ambit, spans[:1], minPrecedence),
                       Right: this.sparse(ambit.SubtractLeft(ws.Ambit), spans[1:], minPrecedence) }
