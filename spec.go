@@ -170,6 +170,7 @@ type precedenceLevels struct {
   precedenceAFE map[string]int
   precedenceAFB map[string]int
   precedenceBFA map[string]int
+  exclusivelyZeroAry map[string]bool
 }
 
 func NewSpec() Spec {
@@ -371,6 +372,20 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
   precMap["AFB"]["or>"] = 3
   precMap["EFE"]["or>"] = 4
   precMap["EFE"]["<empty"] = 5
+
+  exclusivelyZeroAry := make(map[string]bool, len(precMap["EFE"]))
+  for lit, prec := range precMap["EFE"] {
+    if prec > 0 {
+      exclusivelyZeroAry[lit] = true
+    }
+  }
+  for _, patt := range []string{ "EFA", "AFE", "AFB", "BFA" } {
+    for lit, prec := range precMap[patt] {
+      if prec > 0 {
+        exclusivelyZeroAry[lit] = false
+      }
+    }
+  }
   
   precedence := &precedenceLevels {
     precedenceB: precMap["B"],
@@ -379,6 +394,7 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
     precedenceAFE: precMap["AFE"],
     precedenceAFB: precMap["AFB"],
     precedenceBFA: precMap["BFA"],
+    exclusivelyZeroAry: exclusivelyZeroAry,
   }
 
   symbolTable := make(map[string]*specSymbol, len(this.symbols))

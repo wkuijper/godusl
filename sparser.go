@@ -87,7 +87,7 @@ func (this *sparser) sparse(ambit *Ambit, spans []*spanT, minPrecedence int) *Sy
           juxtaposition = true
         } else {
           lit := spans[2].Lit
-          if this.precedenceEFA[lit] == 0 && this.precedenceAFE[lit] == 0 && this.precedenceAFB[lit] == 0 && this.precedenceBFA[lit] == 0 {
+          if this.exclusivelyZeroAry[lit] {
             juxtaposition = true
           }
         }
