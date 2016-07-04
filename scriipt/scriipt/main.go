@@ -80,6 +80,6 @@ func sparse(src *dusl.Source, pretty bool) {
 }
 
 func trace(src *dusl.Source, pretty bool) {
-  trace := scriipt.Lang.Tracer().TraceUndent(src, "S")
+  trace := scriipt.Lang.Tracer().TraceUndent(src, "Stmt")
   trace.Dump(os.Stdout, "", pretty)
 }

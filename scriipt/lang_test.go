@@ -59,50 +59,50 @@ func testTracer(tracer dusl.Tracer, t *testing.T) {
         printf(-x, x)
       else
         print()`
-  r := tracer.TraceUndent(dusl.SourceFromString(s), "S").DumpToString(true)
-  if r != `S:1:
-  hdr:1:;
-    s:1:=
+  r := tracer.TraceUndent(dusl.SourceFromString(s), "Stmt").DumpToString(true)
+  if r != `Stmt:1:
+  loopHeader:1:;
+    simpleStmt:1:=
       ERR:0:expected: variable name
-      x:1:0
-    x:7:<
-      x:0:x
-      x:1:20
-    s:2:++
+      expr:1:0
+    expr:7:<
+      expr:0:x
+      expr:1:20
+    simpleStmt:2:++
       i:0:x
-  S:3:
-    x:7:>
-      x:0:x
-      x:1:10
-    S:4:
-      s:4:
+  Stmt:3:
+    expr:7:>
+      expr:0:x
+      expr:1:10
+    Stmt:4:
+      simpleStmt:4:
         f:0:print
         args:1:x
           aargs:1:x
-            x:0:x
-      S:0:
-    E:0:
-      x:7:<
-        x:0:x
-        x:1:0
-      S:4:
-        s:4:
+            expr:0:x
+      Stmt:0:
+    ElseCont:0:
+      expr:7:<
+        expr:0:x
+        expr:1:0
+      Stmt:4:
+        simpleStmt:4:
           f:0:printf
           args:1:,
             aargs:0:,
               aargs:1:-
-                x:5:-
-                  x:0:x
-              x:0:x
-        S:0:
-      E:1:
-        S:4:
-          s:4:
+                expr:5:-
+                  expr:0:x
+              expr:0:x
+        Stmt:0:
+      ElseCont:1:
+        Stmt:4:
+          simpleStmt:4:
             f:0:print
             args:0:
-          S:0:
-        S:0:
-  S:0:
+          Stmt:0:
+        Stmt:0:
+  Stmt:0:
 ` {
     t.Log(r)
     t.Fail()

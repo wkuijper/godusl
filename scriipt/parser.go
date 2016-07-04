@@ -6,7 +6,7 @@ import (
 )
 
 func Parse(src *dusl.Source) (Stmt, error) {
-  trace := Lang.Tracer().TraceUndent(src, "S")
+  trace := Lang.Tracer().TraceUndent(src, "Stmt")
   if err := trace.ErrorN(20); err != nil {
     return nil, err
   }
@@ -14,8 +14,8 @@ func Parse(src *dusl.Source) (Stmt, error) {
 }
 
 func parseExpr(exprTrace *dusl.Trace) Expr {
-  if exprTrace.Lbl != "x" {
-    panic(exprTrace.Lbl + " != x")
+  if exprTrace.Lbl != "expr" {
+    panic(exprTrace.Lbl + " != expr")
   }
   switch exprTrace.Idx {
   case 0:
@@ -81,8 +81,8 @@ func parseAargs(aargsTrace *dusl.Trace) []Expr {
 }
 
 func parseStmt(stmtTrace *dusl.Trace) Stmt {
-  if stmtTrace.Lbl != "S" {
-    panic(stmtTrace.Lbl + " != S")
+  if stmtTrace.Lbl != "Stmt" {
+    panic(stmtTrace.Lbl + " != Stmt")
   }
   var head Stmt
   var contTrace *dusl.Trace
@@ -102,16 +102,16 @@ func parseStmt(stmtTrace *dusl.Trace) Stmt {
 }
 
 func parseSimpleStmt(simpleStmtTrace *dusl.Trace) (Stmt, *dusl.Trace) {
-  if simpleStmtTrace.Lbl != "S" || simpleStmtTrace.Idx != 4 {
-    panic(fmt.Sprintf("%s != S || %d != 3", simpleStmtTrace.Lbl, simpleStmtTrace.Idx))
+  if simpleStmtTrace.Lbl != "Stmt" || simpleStmtTrace.Idx != 4 {
+    panic(fmt.Sprintf("%s != Stmt || %d != 3", simpleStmtTrace.Lbl, simpleStmtTrace.Idx))
   }
   return newSimpleStmt(simpleStmtTrace.Syn.Ambit,
                        parseSimple(simpleStmtTrace.Subs[0])), simpleStmtTrace.Subs[1]
 }
 
 func parseSimple(simpleTrace *dusl.Trace) Simple {
-  if simpleTrace.Lbl != "s" {
-    panic(simpleTrace.Lbl + " != s")
+  if simpleTrace.Lbl != "simpleStmt" {
+    panic(simpleTrace.Lbl + " != simpleStmt")
   }
   subs := simpleTrace.Subs
   switch simpleTrace.Idx {
@@ -138,8 +138,8 @@ func parseSimple(simpleTrace *dusl.Trace) Simple {
 }
 
 func parseForStmt(forTrace *dusl.Trace) (Stmt, *dusl.Trace) {
-  if forTrace.Lbl != "S" || (forTrace.Idx != 1 && forTrace.Idx != 2) {
-    panic(fmt.Sprintf("%s != S || %d != 1", forTrace.Lbl, forTrace.Idx))
+  if forTrace.Lbl != "Stmt" || (forTrace.Idx != 1 && forTrace.Idx != 2) {
+    panic(fmt.Sprintf("%s != Stmt || %d != 1", forTrace.Lbl, forTrace.Idx))
   }
   subs := forTrace.Subs
   contTrace := subs[2]
@@ -170,12 +170,12 @@ func parseForStmt(forTrace *dusl.Trace) (Stmt, *dusl.Trace) {
 }
 
 func parseIfStmt(ifTrace *dusl.Trace) (Stmt, *dusl.Trace) {
-  return parseElseCont(&dusl.Trace{ Syn: ifTrace.Syn, Lbl: "E", Idx: 0, Subs: ifTrace.Subs })
+  return parseElseCont(&dusl.Trace{ Syn: ifTrace.Syn, Lbl: "ElseCont", Idx: 0, Subs: ifTrace.Subs })
 }
 
 func parseElseCont(elseTrace *dusl.Trace) (Stmt, *dusl.Trace) {
-  if elseTrace.Lbl != "E" {
-    panic(elseTrace.Lbl + " != E")
+  if elseTrace.Lbl != "ElseCont" {
+    panic(elseTrace.Lbl + " != ElseCont")
   }
   subs := elseTrace.Subs
   switch elseTrace.Idx {

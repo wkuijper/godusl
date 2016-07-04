@@ -32,20 +32,20 @@ func init() {
     Literal("end", "ID").
     Literal("noop", "ID").
     
-    Label("x", "expression").
+    Label("expr", "expression").
     Label("args", "argument list").
     Label("aargs", "non-empty argument list").
     
-    Label("s", "simple statement").
+    Label("simpleStmt", "simple statement").
     
     Label("f", "function name").
     Label("v", "variable name").
     Label("i", "integer variable name").
     
-    Label("hdr", "for header").
+    Label("loopHeader", "loop header").
 
-    SequenceLabel("S", "statement").
-    SequenceLabel("E", "else continuation statement").
+    SequenceLabel("Stmt", "statement").
+    SequenceLabel("ElseCont", "else continuation statement").
 
     ShorthandOperator("prfx~", "-", "+").
     ShorthandOperator("~postfx", "--", "++").
@@ -63,77 +63,77 @@ func init() {
       # expressions
       # -----------
       
-      x is> ID
-            or> NUM
-            or> STR
-            or> (x)
-            or> f(args)
-            or> prfx~ x
-            or> x ~postfx
-            or> x ~infix~ x
-            or> true
-            or> false
+      expr is> ID
+           or> NUM
+           or> STR
+           or> (expr)
+           or> f(args)
+           or> prfx~ expr
+           or> expr ~postfx
+           or> expr ~infix~ expr
+           or> true
+           or> false
       
       # (argument) lists
       # ----------------
       
       args is> <empty or> aargs
-      aargs is> aargs, x or> x
+      aargs is> aargs, expr or> expr
 
       # simple statements
       # -----------------
       
-      s is> noop                # no-operation
-            or> v = x           # assignment
-            or> i++             # increment
-            or> i--             # decrement
-            or> f(args)         # function call
+      simpleStmt is> noop       # no-operation
+                 or> v = expr   # assignment
+                 or> i++        # increment
+                 or> i--        # decrement
+                 or> f(args)    # function call
             
       # block statements
       # ----------------
       
-      S is>
+      Stmt is>
         <empty
       or>
-        for hdr                 # optional: initialization; condition; update
-          S                     #   body
-        S                       # continuation
+        for loopHeader          # optional: initialization; condition; update
+          Stmt                  #   body
+        Stmt                    # continuation
       or>
-        for hdr                 # optional: initialization; condition; update
-          S                     #   body
+        for loopHeader          # optional: initialization; condition; update
+          Stmt                  #   body
         end                     # optional: end-marker
-        S                       # continuation
+        Stmt                    # continuation
       or>
-        if x                    # condition
-          S                     #   body
-        E                       # else-if/continuation w/ optional end-marker
+        if expr                 # condition
+          Stmt                  #   body
+        ElseCont                # else-if/continuation w/ optional end-marker
       or>
-        s                       # simple statement
-        S                       # continuation
+        simpleStmt              # simple statement
+        Stmt                    # continuation
 
       # else-if
       # -------
       
-      E is>
-        else if x               # condition
-          S                     #   body
-        E                       # else-if/continuation
+      ElseCont is>
+        else if expr            # condition
+          Stmt                  #   body
+        ElseCont                # else-if/continuation
       or>
         else
-          S                     #   body
-        S                       # continuation
+          Stmt                  #   body
+        Stmt                    # continuation
       or>
-        end
-        S
+        end                     # optional end marker
+        Stmt
       or>
-        S
+        Stmt
 
       # for header
       # ----------
       
-      hdr is> <empty            # infinite loop
-              or> s; x; s       # full for header
-              or> x             # while header
+      loopHeader is> <empty                         # infinite loop
+                 or> simpleStmt; expr; simpleStmt   # full for loop header
+                 or> expr                           # while loop header
 
   `)
   if err != nil {
