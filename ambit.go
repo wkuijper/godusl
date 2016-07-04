@@ -45,13 +45,13 @@ func (this *Ambit) Merge(that *Ambit) *Ambit {
   return &Ambit{Source: this.Source, Start: min(this.Start, that.Start), End: max(this.End, that.End)}
 }
 
-// SubtractLeft returns the largest ambit that starts at this ambit start and does not
+// SubtractLeft returns the largest subambit that starts at this ambit start and does not
 // overlap in any character position with the given ambit.
 func (this *Ambit) SubtractLeft(that *Ambit) *Ambit {
   return &Ambit{Source: this.Source, Start: min(this.End, max(this.Start, that.End)), End: this.End}
 }
 
-// SubtractRight returns the largest ambit that end at this ambit end and does not
+// SubtractRight returns the largest subambit that end at this ambit end and does not
 // overlap in any character position with the given ambit.
 func (this *Ambit) SubtractRight(that *Ambit) *Ambit {
   return &Ambit{Source: this.Source, Start: this.Start, End: max(this.Start, min(this.End, that.Start))}
