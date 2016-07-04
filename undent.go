@@ -34,16 +34,18 @@ func undentSequence(margin int,
   for !ambit.IsEmpty() {
     indentedLineAmbit, remainderAmbit := ambit.SplitLine()
     lineIndent, lineAmbit := indentedLineAmbit.StripIndent()
-    if lineIndent < margin || lineAmbit.IsWhitespace() || lineAmbit.FirstByteIs('#') {
+    if lineAmbit.IsWhitespace() || lineAmbit.FirstByteIs('#') {
       ambit = remainderAmbit
       continue
     }
     lineIndent -= margin
-    if lineIndent < currIndent {
+    if lineIndent >= 0 && lineIndent < currIndent {
       return &Syntax{ Ambit: ambit.CollapseLeft() }, ambit
     }
     var head *Syntax
-    if lineIndent == currIndent {
+    if lineIndent < 0 {
+      head = &Syntax{ Cat: "ERR", Err: fmt.Sprintf("line indented %d spaces before source margin", -lineIndent), Ambit: lineAmbit }
+    } else if lineIndent == currIndent {
       head, remainderAmbit = undentSentence(margin, currIndent, lineAmbit, remainderAmbit)
     } else if lineIndent == currIndent+1 {
       head = &Syntax{ Cat: "ERR", Err: fmt.Sprintf("line indented with odd number of spaces"), Ambit: lineAmbit }

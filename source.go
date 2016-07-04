@@ -62,9 +62,7 @@ func (this *Source) LineColumn(pos int) (int, int) {
 }
 
 // Create an ambit that represent the entire source, minus the BOM (byte order mark)
-// if present and minus the first byte if this byte corresponds to a '#'. The latter
-// convention helps ignoring hashbang line and allows DUSL sources to be easily
-// embedded inside a markdown document.
+// if present.
 func (this *Source) FullAmbit() *Ambit {
   text := this.Text
   start := 0
@@ -73,10 +71,5 @@ func (this *Source) FullAmbit() *Ambit {
   if end >= 3 &&  text[0] == 0xEF && text[1] == 0xBB && text[2] == 0xBF { 
     start += 3
   }
-  ambit := &Ambit{ Source: this, Start: start, End: end }
-  // Check for hash (to avoid shebang and/or markdown header)
-  if start < end && text[start] == '#' {
-    _, ambit = ambit.SplitLine()
-  }
-  return ambit
+  return &Ambit{ Source: this, Start: start, End: end }
 }
