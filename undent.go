@@ -44,7 +44,7 @@ func undentSequence(margin int,
     }
     var head *Syntax
     if lineIndent < 0 {
-      head = &Syntax{ Cat: "ERR", Err: fmt.Sprintf("line indented %d spaces before source margin", -lineIndent), Ambit: lineAmbit }
+      head = &Syntax{ Cat: "ERR", Err: fmt.Sprintf("line indented %d space(s) before source margin", -lineIndent), Ambit: lineAmbit }
     } else if lineIndent == currIndent {
       head, remainderAmbit = undentSentence(margin, currIndent, lineAmbit, remainderAmbit)
     } else if lineIndent == currIndent+1 {

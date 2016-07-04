@@ -89,11 +89,11 @@ func parseStmt(stmtTrace *dusl.Trace) Stmt {
   switch stmtTrace.Idx {
   case 0: 
     return newEmptyStmt(stmtTrace.Syn.Ambit)
-  case 1:
+  case 1, 2:
     head, contTrace = parseForStmt(stmtTrace)
-  case 2:
-    head, contTrace = parseIfStmt(stmtTrace)
   case 3:
+    head, contTrace = parseIfStmt(stmtTrace)
+  case 4:
     head, contTrace = parseSimpleStmt(stmtTrace)
   default:
     panic("missing case")
@@ -102,7 +102,7 @@ func parseStmt(stmtTrace *dusl.Trace) Stmt {
 }
 
 func parseSimpleStmt(simpleStmtTrace *dusl.Trace) (Stmt, *dusl.Trace) {
-  if simpleStmtTrace.Lbl != "S" || simpleStmtTrace.Idx != 3 {
+  if simpleStmtTrace.Lbl != "S" || simpleStmtTrace.Idx != 4 {
     panic(fmt.Sprintf("%s != S || %d != 3", simpleStmtTrace.Lbl, simpleStmtTrace.Idx))
   }
   return newSimpleStmt(simpleStmtTrace.Syn.Ambit,
@@ -138,7 +138,7 @@ func parseSimple(simpleTrace *dusl.Trace) Simple {
 }
 
 func parseForStmt(forTrace *dusl.Trace) (Stmt, *dusl.Trace) {
-  if forTrace.Lbl != "S" || forTrace.Idx != 1 {
+  if forTrace.Lbl != "S" || (forTrace.Idx != 1 && forTrace.Idx != 2) {
     panic(fmt.Sprintf("%s != S || %d != 1", forTrace.Lbl, forTrace.Idx))
   }
   subs := forTrace.Subs
@@ -187,7 +187,7 @@ func parseElseCont(elseTrace *dusl.Trace) (Stmt, *dusl.Trace) {
                      el5e), contTrace
   case 1:
     return parseStmt(subs[0]), subs[1]
-  case 2:
+  case 2, 3:
     return newEmptyStmt(elseTrace.Syn.Ambit), subs[0]
   default:
     panic("missing case")

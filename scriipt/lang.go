@@ -23,15 +23,13 @@ func init() {
     OperatorBFA("||").
     OperatorBFA(",").
     OperatorBFA("=").
-    //OperatorEFE("noop").
     OperatorBFA(";").
-    //OperatorEFA("if", "else", "for").
-    //OperatorEFE("else").
     Brackets("( )", "[ ]", "{ }").
 
     Literal("if", "ID").
     Literal("else", "ID").
     Literal("for", "ID").
+    Literal("end", "ID").
     Literal("noop", "ID").
     
     Label("x", "expression").
@@ -101,9 +99,14 @@ func init() {
           S                     #   body
         S                       # continuation
       or>
+        for hdr                 # optional: initialization; condition; update
+          S                     #   body
+        end                     # optional: end-marker
+        S                       # continuation
+      or>
         if x                    # condition
           S                     #   body
-        E                       # else-if/continuation
+        E                       # else-if/continuation w/ optional end-marker
       or>
         s                       # simple statement
         S                       # continuation
@@ -119,6 +122,9 @@ func init() {
         else
           S                     #   body
         S                       # continuation
+      or>
+        end
+        S
       or>
         S
 

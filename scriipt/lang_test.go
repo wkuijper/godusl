@@ -70,11 +70,11 @@ func testTracer(tracer dusl.Tracer, t *testing.T) {
       x:1:20
     s:2:++
       i:0:x
-  S:2:
+  S:3:
     x:7:>
       x:0:x
       x:1:10
-    S:3:
+    S:4:
       s:4:
         f:0:print
         args:1:x
@@ -85,7 +85,7 @@ func testTracer(tracer dusl.Tracer, t *testing.T) {
       x:7:<
         x:0:x
         x:1:0
-      S:3:
+      S:4:
         s:4:
           f:0:printf
           args:1:,
@@ -96,7 +96,7 @@ func testTracer(tracer dusl.Tracer, t *testing.T) {
               x:0:x
         S:0:
       E:1:
-        S:3:
+        S:4:
           s:4:
             f:0:print
             args:0:
