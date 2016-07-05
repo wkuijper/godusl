@@ -97,11 +97,11 @@ func init() {
       or>
         for loopHeader          # optional: initialization; condition; update
           Stmt                  #   body
+        end                     # optional: end-marker
         Stmt                    # continuation
       or>
         for loopHeader          # optional: initialization; condition; update
           Stmt                  #   body
-        end                     # optional: end-marker
         Stmt                    # continuation
       or>
         if expr                 # condition

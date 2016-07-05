@@ -60,7 +60,7 @@ func testTracer(tracer dusl.Tracer, t *testing.T) {
       else
         print()`
   r := tracer.TraceUndent(dusl.SourceFromString(s), "Stmt").DumpToString(true)
-  if r != `Stmt:1:
+  if r != `Stmt:2:
   loopHeader:1:;
     simpleStmt:1:=
       ERR:0:expected: variable name
