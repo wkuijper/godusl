@@ -25,12 +25,9 @@ func init() {
     OperatorBFA("=").
     OperatorBFA(";").
     Brackets("( )", "[ ]", "{ }").
-
-    Literal("if", "ID").
-    Literal("else", "ID").
-    Literal("for", "ID").
-    Literal("end", "ID").
-    Literal("noop", "ID").
+    JuxtapositionLWA("if", "else", "for").
+    
+    Literal("end", "noop").
     
     Label("expr", "expression").
     Label("args", "argument list").

@@ -76,27 +76,32 @@ func (this *sparser) sparse(ambit *Ambit, spans []*spanT, minPrecedence int) *Sy
                     Right: &Syntax{ Ambit: span.Ambit.CollapseRight() } }
   }
   l, splitPrecedence, splitLoc, splitPrecLeft, splitPrecRight := len(spans)-1, maxPrecedence+1, -1, -1, -1
-  if span, ws := spans[0], spans[1]; span.Cat != "OP" && ws.Cat == "WS" {
-    juxtaposition := false
-    if len(spans) == 2 {
-      juxtaposition = true
-    } else {
-      cat := spans[2].Cat
-      if cat != "ERR" {
-        if cat != "OP" {
-          juxtaposition = true
-        } else {
-          lit := spans[2].Lit
-          if this.exclusivelyZeroAry[lit] {
-            juxtaposition = true
-          }
+  if span, ws := spans[0], spans[1]; span.Cat != "OP" && ws.Cat == "WS" { // implies: len(spans) >= 3
+    lit := span.Lit
+    prec := this.precedenceLWA[lit]
+    if prec >= minPrecedence && prec < splitPrecedence {
+      if this.checkRightwardJuxtapositionCandidate(spans, 1, prec) {
+        if prec == minPrecedence {
+          return &Syntax{ Cat: "JUXT", Lit: " ", Ambit: ambit, OpAmbit: ws.Ambit,
+                          Left: this.sparse(ambit.SubtractRight(ws.Ambit), spans[:1], prec),
+                          Right: this.sparse(ambit.SubtractLeft(ws.Ambit), spans[2:], prec) }
         }
+        splitLoc, splitPrecedence, splitPrecLeft, splitPrecRight = 1, prec, prec, prec
       }
     }
-    if juxtaposition {
-      return &Syntax{ Cat: "JUXT", Lit: " ", Ambit: ambit, OpAmbit: ws.Ambit,
-                      Left: this.sparse(span.Ambit, spans[:1], minPrecedence),
-                      Right: this.sparse(ambit.SubtractLeft(ws.Ambit), spans[1:], minPrecedence) }
+  }
+  if span, ws := spans[l], spans[l-1]; span.Cat != "OP" && ws.Cat == "WS" { // implies: len(spans) >= 3
+    lit := span.Lit
+    prec := this.precedenceAWL[lit]
+    if prec >= minPrecedence && prec < splitPrecedence {
+      if this.checkLeftwardJuxtapositionCandidate(spans, l-1, prec) {
+        if prec == minPrecedence {
+          return &Syntax{ Cat: "JUXT", Lit: " ", Ambit: ambit, OpAmbit: ws.Ambit,
+                          Left: this.sparse(ambit.SubtractRight(ws.Ambit), spans[:l-1], prec),
+                          Right: this.sparse(ambit.SubtractLeft(ws.Ambit), spans[l:], prec) }
+        }
+        splitLoc, splitPrecedence, splitPrecLeft, splitPrecRight = l-1, prec, prec, prec
+      }
     }
   }
   if span := spans[0]; span.Cat == "OP" {
@@ -156,17 +161,21 @@ func (this *sparser) sparse(ambit *Ambit, spans []*spanT, minPrecedence int) *Sy
   }
   if splitLoc >= 0 {
     splitSpan := spans[splitLoc]
+    cat, lit := splitSpan.Cat, splitSpan.Lit
+    if cat == "WS" {
+      cat, lit = "JUXT", " "
+    }
     if splitLoc == 0 {
-      return &Syntax{ Cat: splitSpan.Cat, Lit: splitSpan.Lit, Ambit: ambit, OpAmbit: splitSpan.Ambit,
+      return &Syntax{ Cat: cat, Lit: lit, Ambit: ambit, OpAmbit: splitSpan.Ambit,
                       Left: &Syntax{ Ambit: splitSpan.Ambit.CollapseLeft() },
                       Right: this.sparse(ambit.SubtractLeft(splitSpan.Ambit), spans[1:], splitPrecRight) }
     } 
     if splitLoc == l {
-      return &Syntax{ Cat: splitSpan.Cat, Lit: splitSpan.Lit, Ambit: ambit, OpAmbit: splitSpan.Ambit,
+      return &Syntax{ Cat: cat, Lit: lit, Ambit: ambit, OpAmbit: splitSpan.Ambit,
                       Left: this.sparse(ambit.SubtractRight(splitSpan.Ambit), spans[:l], splitPrecLeft),
                       Right: &Syntax{ Ambit: splitSpan.Ambit.CollapseRight() } }
     }
-    return &Syntax{ Cat: splitSpan.Cat, Lit: splitSpan.Lit, Ambit: ambit, OpAmbit: splitSpan.Ambit, 
+    return &Syntax{ Cat: cat, Lit: lit, Ambit: ambit, OpAmbit: splitSpan.Ambit, 
                     Left: this.sparse(ambit.SubtractRight(splitSpan.Ambit), spans[:splitLoc], splitPrecLeft),
                     Right: this.sparse(ambit.SubtractLeft(splitSpan.Ambit), spans[splitLoc+1:], splitPrecRight) }
   }
@@ -179,6 +188,49 @@ func (this *sparser) sparse(ambit *Ambit, spans []*spanT, minPrecedence int) *Sy
   return &Syntax{ Cat: "GLUE", Lit: "", Ambit: ambit, OpAmbit: secondSpan.Ambit.CollapseLeft(),
                   Left: this.sparse(ambit.SubtractRight(secondSpan.Ambit), spans[:1], minPrecedence),
                   Right: this.sparse(ambit.SubtractLeft(firstSpan.Ambit), spans[1:], minPrecedence) }
+}
+
+func (this *sparser) checkLeftwardJuxtapositionCandidate(spans []*spanT, index int, minPrecLeft int) bool {
+  indexRL := index-1
+  for indexRL >= 0 {
+    span := spans[indexRL]
+    if span.Cat != "WS" {
+      if span.Cat != "OP" {
+        return true
+      }
+      lit := span.Lit
+      if this.precedenceAFB[lit] >= minPrecLeft ||
+         this.precedenceBFA[lit] >= minPrecLeft ||
+         this.precedenceEFA[lit] >= minPrecLeft {
+        return false
+      }
+      return true
+    }
+    indexRL--
+  }
+  return false
+}
+
+func (this *sparser) checkRightwardJuxtapositionCandidate(spans []*spanT, index int, minPrecRight int) bool {
+  indexLR := index+1
+  l := len(spans)-1
+  for indexLR <= l {
+    span := spans[indexLR]
+    if span.Cat != "WS" {
+      if span.Cat != "OP" {
+        return true
+      }
+      lit := span.Lit
+      if this.precedenceAFB[lit] >= minPrecRight ||
+         this.precedenceBFA[lit] >= minPrecRight ||
+         this.precedenceAFE[lit] >= minPrecRight {
+        return false
+      }
+      return true
+    }
+    indexLR++
+  }
+  return false
 }
 
 func (this *sparser) checkInfixCandidate(spans []*spanT, index int, minPrecLeft int, minPrecRight int) bool {  

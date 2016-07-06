@@ -17,7 +17,7 @@ func TestTracer(t *testing.T) {
 		SequenceLabel("XSQ", "expression sequence").
 		SentenceLabel("XSN", "expression sentence").
 		Label("X", "expression").
-		Literal("const", "ID").
+		Literal("const").
 		Grammar(`
       XSQ is>
         XSN

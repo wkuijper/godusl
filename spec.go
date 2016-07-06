@@ -62,13 +62,27 @@ type Spec interface {
   // Label introduces an ordinary label that can be used to label intra-sentence
   // constituents.
   Label(lbl string, desc string) Spec
-  // Literal introduces a symbol that should be interpreted with a given lexical
+  // Literal introduces a symbol that should be interpreted with its given lexical
   // category rather than being interpreted like a meta-symbol. For example: if we
-  // want, for some reason, to use the identifier "myName" in the grammar as an "ID"
-  // lexical category rather than as a label we can define that using a Literal
+  // want to use the identifier "myName" in the grammar as an
+  // identifier rather than as a meta-label we can define that using a Literal
   // clause. Note that, otherwise, the use of "myName" in the grammar will error out
   // with an undefined-symbol error.
-  Literal(lit string, cat string) Spec
+  Literal(lits ...string) Spec
+  // JuxtapositionLWA adds a layer to the language consisting of a number of literals
+  // that can be juxtaposed to the left of an expression, this means each such literal
+  // can be prepended separated by nothing but whitespace from the right-hand-side of
+  // the expression. The parser will only parse an expression in the juxtaposition
+  // (JUXT) category when the expression cannot otherwise be parsed as an operator
+  // expression.
+  JuxtapositionLWA(ids ...string) Spec
+  // JuxtapositionAWL adds a layer to the language consisting of a number of literals
+  // that can be juxtaposed to the right of an expression, this means each such literal
+  // can be appended separated by nothing but whitespace from the left-hand-side of
+  // the expression. The parser will only parse an expression in the juxtaposition
+  // (JUXT) category when the expression cannot otherwise be parsed as an operator
+  // expression.
+  JuxtapositionAWL(ids ...string) Spec
   // ShorthandOperator introduces an shorthand for a given set of operators. The
   // precedence of the shorthand will be the minimal precedence of all the operators
   // given. Using a shorthand is more than just a convenience, because the resulting
@@ -170,7 +184,8 @@ type precedenceLevels struct {
   precedenceAFE map[string]int
   precedenceAFB map[string]int
   precedenceBFA map[string]int
-  exclusivelyZeroAry map[string]bool
+  precedenceLWA map[string]int
+  precedenceAWL map[string]int
 }
 
 func NewSpec() Spec {
@@ -211,6 +226,20 @@ func (this *spec) OperatorEFE(ops ...string) Spec {
   return this.layer("EFE", ops)
 }
 
+func (this *spec) JuxtapositionLWA(ids ...string) Spec {
+  for _, id := range ids {
+    this.symbol(spec_Literal, id, "", this.scan(id), id, "")
+  }
+  return this.layer("LWA", ids)
+}
+
+func (this *spec) JuxtapositionAWL(ids ...string) Spec {
+  for _, id := range ids {
+    this.symbol(spec_Literal, id, "", this.scan(id), id, "")
+  }
+  return this.layer("AWL", ids)
+}
+
 func (this *spec) Brackets(ops ...string) Spec {
   return this.layer("B", ops)
 }
@@ -224,8 +253,11 @@ func (this *spec) Category(cat string, desc string) Spec {
   return this.symbol(spec_Category, cat, "", cat, "", desc)
 }
 
-func (this *spec) Literal(lit string, cat string) Spec {
-  return this.symbol(spec_Literal, lit, "", cat, lit, lit)
+func (this *spec) Literal(lits ...string) Spec {
+  for _, lit := range lits {
+    this.symbol(spec_Literal, lit, "", this.scan(lit), lit, lit)
+  }
+  return this
 }
 
 func (this *spec) SequenceLabel(lbl string, desc string) Spec {
@@ -245,6 +277,21 @@ func (this *spec) symbol(typ int, symb, lbl string, cat string, lit string, desc
   return this
 }
 
+func (this *spec) scan(lit string) string {
+  if this.scanner == nil {
+    return ""
+  }
+  scan := this.scanner.Scan()
+  cat, cont := "", true
+  for _, c := range lit {
+    if !cont {
+      return ""
+    }
+    cat, cont = scan.Consume(c)
+  }
+  return cat
+}
+
 func (this *spec) Grammar(grammar string) (Lang, error) {
   
   precMap := make(map[string]map[string]int, 16)
@@ -260,28 +307,11 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
     }
     for _, arg := range layer.args {
       if pattMap[arg] != 0 {
-        return nil, fmt.Errorf("double declaration of %s operator/bracket: '%s'", layer.pattern, arg)
+        return nil, fmt.Errorf("double declaration of %s identifier/operator/bracket: '%s'", layer.pattern, arg)
       }
       pattMap[arg] = precedence
     }
   }
-  /*
-  conflicts := map[string][]string {
-    "BFA": []string{ "AFB", "AFE" },
-    "AFB": []string{ "BFA", "EFA" },
-    "EFA": []string{ "AFE" },
-    "AFE": []string{ "EFA" },
-  }
-  for pattern, pattMap := range precMap {
-    for _, conflictPattern := range conflicts[pattern] {
-      conflictPattMap := precMap[conflictPattern]
-      for op, _ := range pattMap {
-        if _, present := conflictPattMap[op]; present {
-          return nil, fmt.Errorf("operator cannot simultaneously be declared as %s and %s operator: '%s'", pattern, conflictPattern, op)
-        }
-      }
-    }
-  }*/
 
   prfxScanner := &prfxTree{}
   var scanner Scanner
@@ -307,7 +337,7 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
       prfxMetaScanner.add("OP", op)
     }
   }
-  
+
   for brs, _ := range precMap["B"] {
     parts := strings.Split(brs, " ")
     if len(parts) < 2 {
@@ -372,20 +402,6 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
   precMap["AFB"]["or>"] = 3
   precMap["EFE"]["or>"] = 4
   precMap["EFE"]["<empty"] = 5
-
-  exclusivelyZeroAry := make(map[string]bool, len(precMap["EFE"]))
-  for lit, prec := range precMap["EFE"] {
-    if prec > 0 {
-      exclusivelyZeroAry[lit] = true
-    }
-  }
-  for _, patt := range []string{ "EFA", "AFE", "AFB", "BFA" } {
-    for lit, prec := range precMap[patt] {
-      if prec > 0 {
-        exclusivelyZeroAry[lit] = false
-      }
-    }
-  }
   
   precedence := &precedenceLevels {
     precedenceB: precMap["B"],
@@ -394,7 +410,8 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
     precedenceAFE: precMap["AFE"],
     precedenceAFB: precMap["AFB"],
     precedenceBFA: precMap["BFA"],
-    exclusivelyZeroAry: exclusivelyZeroAry,
+    precedenceLWA: precMap["LWA"],
+    precedenceAWL: precMap["AWL"],
   }
 
   symbolTable := make(map[string]*specSymbol, len(this.symbols))
