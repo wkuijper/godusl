@@ -228,14 +228,18 @@ func (this *spec) OperatorEFE(ops ...string) Spec {
 
 func (this *spec) JuxtapositionLWA(ids ...string) Spec {
   for _, id := range ids {
-    this.symbol(spec_Literal, id, "", this.scan(id), id, "")
+    if !strings.ContainsAny(id, " ") { // otherwise it's a bracket
+      this.symbol(spec_Literal, id, "", this.scan(id), id, "")
+    }
   }
   return this.layer("LWA", ids)
 }
 
 func (this *spec) JuxtapositionAWL(ids ...string) Spec {
   for _, id := range ids {
-    this.symbol(spec_Literal, id, "", this.scan(id), id, "")
+    if !strings.ContainsAny(id, " ") { // otherwise it's a bracket
+      this.symbol(spec_Literal, id, "", this.scan(id), id, "")
+    }
   }
   return this.layer("AWL", ids)
 }
