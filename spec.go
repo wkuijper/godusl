@@ -83,6 +83,20 @@ type Spec interface {
   // (JUXT) category when the expression cannot otherwise be parsed as an operator
   // expression.
   JuxtapositionAWL(ids ...string) Spec
+  // GlueLA adds a layer to the language consisting of a number of literals
+  // that can be glued to the left of an expression, this means each such literal
+  // can be prepended directly (without intervening whitespace) to the right-hand-side of
+  // the expression. The parser will only parse an expression in the glue
+  // (GLUE) category when the expression cannot otherwise be parsed as an operator
+  // expression.
+  GlueLA(ids ...string) Spec
+  // GlueAL adds a layer to the language consisting of a number of literals
+  // that can be glued to the right of an expression, this means each such literal
+  // can be appended directly (without intervening whitespace) to the left-hand-side of
+  // the expression. The parser will only parse an expression in the glue
+  // (GLUE) category when the expression cannot otherwise be parsed as an operator
+  // expression.
+  GlueAL(ids ...string) Spec
   // ShorthandOperator introduces an shorthand for a given set of operators. The
   // precedence of the shorthand will be the minimal precedence of all the operators
   // given. Using a shorthand is more than just a convenience, because the resulting
@@ -186,6 +200,8 @@ type precedenceLevels struct {
   precedenceBFA map[string]int
   precedenceLWA map[string]int
   precedenceAWL map[string]int
+  precedenceLA map[string]int
+  precedenceAL map[string]int
 }
 
 func NewSpec() Spec {
@@ -242,6 +258,24 @@ func (this *spec) JuxtapositionAWL(ids ...string) Spec {
     }
   }
   return this.layer("AWL", ids)
+}
+
+func (this *spec) GlueLA(ids ...string) Spec {
+  for _, id := range ids {
+    if !strings.ContainsAny(id, " ") { // otherwise it's a bracket
+      this.symbol(spec_Literal, id, "", this.scan(id), id, "")
+    }
+  }
+  return this.layer("LA", ids)
+}
+
+func (this *spec) GlueAL(ids ...string) Spec {
+  for _, id := range ids {
+    if !strings.ContainsAny(id, " ") { // otherwise it's a bracket
+      this.symbol(spec_Literal, id, "", this.scan(id), id, "")
+    }
+  }
+  return this.layer("AL", ids)
 }
 
 func (this *spec) Brackets(ops ...string) Spec {
@@ -416,6 +450,8 @@ func (this *spec) Grammar(grammar string) (Lang, error) {
     precedenceBFA: precMap["BFA"],
     precedenceLWA: precMap["LWA"],
     precedenceAWL: precMap["AWL"],
+    precedenceLA: precMap["LA"],
+    precedenceAL: precMap["AL"],
   }
 
   symbolTable := make(map[string]*specSymbol, len(this.symbols))
