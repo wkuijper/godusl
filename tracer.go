@@ -33,11 +33,13 @@ type Trace struct {
   Syn *Syntax
   Err string
   Subs []*Trace
+  Cats []*Syntax
 }
 
 type templateT struct {
   lbl string
   subCount int
+  catCount int
   matchCat bool
   cat string
   matchLit bool
@@ -125,12 +127,20 @@ func (this *Trace) gatherErrors(errs []error) []error {
   return errs
 }
 
+func (this *templateT) catCountOrZero() int {
+  if this == nil {
+    return 0
+  }
+  return this.catCount
+}
+
 func (this *templateT) subCountOrZero() int {
   if this == nil {
     return 0
   }
   return this.subCount
 }
+
 func (this *templateT) dump(out io.Writer, prfx string) {
   if this == nil {
     return
@@ -173,8 +183,13 @@ func (this *tracer) label(root *Syntax, lbl string) *Trace {
     for idx, template := range templates {
       if template.checkMatch(node) {
         trace.Idx = idx
-        trace.Subs = make([]*Trace, template.subCount)
-        template.performMatch(node, waiting, 0, trace.Subs)
+        if template.subCount > 0 {
+          trace.Subs = make([]*Trace, template.subCount)
+        }
+        if template.catCount > 0 {
+          trace.Cats = make([]*Syntax, template.catCount)
+        }
+        template.performMatch(node, waiting, 0, trace.Subs, 0, trace.Cats)
         matched = true
         break
       }
@@ -201,20 +216,26 @@ func (this *templateT) checkMatch(node *Syntax) bool {
   return true
 }
 
-func (this *templateT) performMatch(node *Syntax, waiting *waitingT, subi int, subs []*Trace) int {
+func (this *templateT) performMatch(node *Syntax, waiting *waitingT, subi int, subs []*Trace, cati int, cats []*Syntax) (int, int) {
   lbl := this.lbl
   if lbl != "" {
     sub := &Trace{ Lbl: lbl, Syn: node }
     subs[subi] = sub
     subi++
     waiting.list = append(waiting.list, waitingItemT{ node: node, trace: sub})
-    return subi
+    return subi, cati
   }
   if this.left != nil { // implies this.right != nil
-    subi = this.left.performMatch(node.Left, waiting, subi, subs)
-    subi = this.right.performMatch(node.Right, waiting, subi, subs)
+    subi, cati = this.left.performMatch(node.Left, waiting, subi, subs, cati, cats)
+    subi, cati = this.right.performMatch(node.Right, waiting, subi, subs, cati, cats)
+    return subi, cati
   }
-  return subi
+  // implies: this.left == this.right == nil
+  if !this.matchLit && this.matchCat && this.cat != "" {
+    cats[cati] = node
+    cati++
+  }
+  return subi, cati
 }
 
 func (this *tracer) Dump(out io.Writer, prfx string) {

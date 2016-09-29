@@ -734,6 +734,7 @@ func (this *tpT) singleSentenceRuleBody(node *Syntax, sn bool, lbl string) {
     if sn {
       template = &templateT{ matchCat: true, cat: "SN",
                              subCount: template.subCount,
+                             catCount: template.catCount,
                              left: template,
                              right: &templateT{ matchCat: true, cat: ""} }
     }
@@ -767,9 +768,9 @@ func (this *tpT) possiblyEmptyIntraSentenceTemplate(node *Syntax) *templateT {
     case spec_Label:
       return &templateT{ lbl: node.Lit, subCount: 1 }
     case spec_Literal:
-      return &templateT{ matchCat: true, cat: symbol.cat, matchLit: true, lit: symbol.lit }
+      return &templateT{ matchCat: true, cat: symbol.cat, matchLit: true, lit: symbol.lit, catCount: 0 }
     case spec_Category:
-      return &templateT{ matchCat: true, cat: symbol.cat }
+      return &templateT{ matchCat: true, cat: symbol.cat, catCount: 1 }
     default:
       this.err(node, "unknown symbol: '%s'", node.Lit) // <-- defensive
     }
@@ -793,12 +794,14 @@ func (this *tpT) possiblyEmptyIntraSentenceTemplate(node *Syntax) *templateT {
                             left: this.possiblyEmptyIntraSentenceTemplate(node.Left),
                             right: this.possiblyEmptyIntraSentenceTemplate(node.Right) }
     template.subCount = template.left.subCountOrZero() + template.right.subCountOrZero()
+    template.catCount = template.left.catCountOrZero() + template.right.catCountOrZero()
     return template         
   }
   template := &templateT{ matchCat: true, cat: node.Cat, matchLit: true, lit: node.Lit,
                           left: this.possiblyEmptyIntraSentenceTemplate(node.Left),
                           right: this.possiblyEmptyIntraSentenceTemplate(node.Right) }
   template.subCount = template.left.subCountOrZero() + template.right.subCountOrZero()
+  template.catCount = template.left.catCountOrZero() + template.right.catCountOrZero()
   return template
 }
 
@@ -830,6 +833,7 @@ func (this *tpT) possiblyEmptyMultiSentenceTemplate(node *Syntax) *templateT {
                             left: this.possiblyEmptyMultiSentenceTemplate(node.Left),
                             right: this.possiblyEmptyMultiSentenceTemplate(node.Right) }
     template.subCount = template.left.subCountOrZero() + template.right.subCountOrZero()
+    template.catCount = template.left.catCountOrZero() + template.right.subCountOrZero()
     return template
   }
   if node.Cat == "SN" {
@@ -844,6 +848,7 @@ func (this *tpT) possiblyEmptyMultiSentenceTemplate(node *Syntax) *templateT {
                             left: this.possiblyEmptyIntraSentenceTemplate(node.Left),
                             right: this.possiblyEmptyMultiSentenceTemplate(node.Right) }
     template.subCount = template.left.subCountOrZero() + template.right.subCountOrZero()
+    template.catCount = template.left.catCountOrZero() + template.right.catCountOrZero()
     return template
   }
   return this.possiblyEmptyIntraSentenceTemplate(node)
