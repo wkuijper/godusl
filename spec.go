@@ -794,7 +794,7 @@ func (this *tpT) possiblyEmptyIntraSentenceTemplate(node *Syntax) *templateT {
                             left: this.possiblyEmptyIntraSentenceTemplate(node.Left),
                             right: this.possiblyEmptyIntraSentenceTemplate(node.Right) }
     template.subCount = template.left.subCountOrZero() + template.right.subCountOrZero()
-    template.catCount = template.left.catCountOrZero() + template.right.catCountOrZero()
+    template.catCount = template.left.catCountOrZero() + template.right.catCountOrZero() + 1
     return template         
   }
   template := &templateT{ matchCat: true, cat: node.Cat, matchLit: true, lit: node.Lit,

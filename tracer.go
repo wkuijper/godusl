@@ -226,12 +226,16 @@ func (this *templateT) performMatch(node *Syntax, waiting *waitingT, subi int, s
     return subi, cati
   }
   if this.left != nil { // implies this.right != nil
+    if this.matchLit && this.litSet != nil {
+      cats[cati] = node
+      cati++      
+    }
     subi, cati = this.left.performMatch(node.Left, waiting, subi, subs, cati, cats)
     subi, cati = this.right.performMatch(node.Right, waiting, subi, subs, cati, cats)
     return subi, cati
   }
   // implies: this.left == this.right == nil
-  if !this.matchLit && this.matchCat && this.cat != "" {
+  if !(this.matchLit && this.litSet == nil) && this.matchCat && this.cat != "" {
     cats[cati] = node
     cati++
   }
